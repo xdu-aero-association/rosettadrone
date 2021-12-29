@@ -88,6 +88,37 @@
         <activity android:name="sq.rogue.rosettadrone.settings.Waypoint2Activity">
         </activity>
 
+        <!-- autolanding -->
+        <activity
+            android:name="sq.rogue.rosettadrone.autolanding.AutoLandingActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_mainactivity"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
+                android:resource="@xml/accessory_filter" />
+
+        </activity>
+
+        <activity
+            android:name="sq.rogue.rosettadrone.autolanding.PointingTestActivity"
+            android:label="@string/title_activity_pointing_test"
+            android:launchMode="singleInstance"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen" >
+        </activity>
+
         <service
             android:name="dji.sdk.sdkmanager.DJIGlobalService"
             tools:ignore="Instantiatable">
