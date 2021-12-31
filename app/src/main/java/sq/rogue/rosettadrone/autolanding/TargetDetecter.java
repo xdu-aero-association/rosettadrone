@@ -1,45 +1,35 @@
 package sq.rogue.rosettadrone.autolanding;
 
-import static org.opencv.imgproc.Imgproc.COLOR_RGB2GRAY;
-import static org.opencv.imgproc.Imgproc.HOUGH_GRADIENT;
-import static org.opencv.imgproc.Imgproc.HoughCircles;
-import static org.opencv.imgproc.Imgproc.MORPH_CLOSE;
-import static org.opencv.imgproc.Imgproc.MORPH_RECT;
-import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
-import static org.opencv.imgproc.Imgproc.cvtColor;
-import static org.opencv.imgproc.Imgproc.getStructuringElement;
-import static org.opencv.imgproc.Imgproc.morphologyEx;
-import static org.opencv.imgproc.Imgproc.threshold;
-
 import android.graphics.PointF;
 import android.view.View;
-
+import static org.opencv.imgproc.Imgproc.*;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Size;
+import org.opencv.imgproc.Moments;
 import org.opencv.videoio.VideoCapture;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flighthub.model.LiveStream;
 import sq.rogue.rosettadrone.DroneModel;
 
 
-public class TargetDetecter implements Runnable{
-
+public class TargetDetecter {
 
     //for read in
     LiveStream liveStream = new LiveStream();
-    String rtmpURL;
+    String rtmpURL;                 //? not use
     VideoCapture capture;
     private int FrameCnt;
     private int MAX_DEALING_FRAMES = 30;
 
     //for image process
     private Mat frame = new Mat();
-    private List<MatOfPoint> contours;
+    private List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
     private int MaxCircleNum;
     private double[] Circles;
 
@@ -50,19 +40,10 @@ public class TargetDetecter implements Runnable{
     private double MAX_DEVITATION = 0.01;
     View parent;
 
-    //for fly control
-    private DroneModel mModel;
-    private FlightController mFlightController;
-    private double droneLocationLat;
-    private double droneLocationLng;
-
-
-
     public TargetDetecter(){
         rtmpURL = liveStream.getRtmpURL();
         capture = new VideoCapture(rtmpURL);
     }
-
 
     private Point getCurrentPoint(Mat frame){
 
@@ -87,29 +68,47 @@ public class TargetDetecter implements Runnable{
         Mat element = getStructuringElement(MORPH_RECT, new Size(7, 7));
         morphologyEx(BinaryFrame, BinaryFrame, MORPH_CLOSE, element);
 
-        //1\ get contours
-//        findContours(BinaryFrame, contours, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
-//        connectedComponentsWithStats(BinaryFrame, labels, stats, centroids);
+        //get contours
+        findContours(BinaryFrame, contours, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
+        connectedComponentsWithStats(BinaryFrame, labels, stats, centroids);
+        getBiggestContours(contours);
+        int max = getBiggestContoursNumber(contours);
 
-        //2\ get the contours according to shape and area
-        Mat CircleFrame = new Mat();
-        HoughCircles(BinaryFrame, CircleFrame, HOUGH_GRADIENT, 1, 10);
+        //get center
+        Moments mMoments = moments(contours.get(max));
+        Point mMomentsP = new Point(mMoments.m10 / mMoments.m00, mMoments.m01 / mMoments.m00);
 
-        //get the center point
-        double MaxRadius = CircleFrame.get(0, 0)[2];
-        for(int i=0; i< CircleFrame.cols(); i++){
-            Circles = CircleFrame.get(0, i);
-            if(MaxRadius < Circles[2]) {
-                MaxRadius = Circles[2];
-                MaxCircleNum = i;
-            }
-        }
-        Circles = CircleFrame.get(0, MaxCircleNum);
-
-        return new Point(Circles[0], Circles[1]);
+        return mMomentsP;
     }
 
-    private boolean pointIsValid(Point previous, Point current){
+    private int getBiggestContoursNumber(List<MatOfPoint> contours) {
+        double max_area = contourArea(contours.get(0));
+        int max = 0;
+        for(int i=0; i< contours.size(); i++){
+            double area = contourArea((contours.get(i)));
+            if(area > max_area){
+                max_area = area;
+                max = i;
+            }
+        }
+        return max;
+    }
+
+    private void getBiggestContours(List<MatOfPoint> contours) {
+        Iterator<MatOfPoint> each = contours.iterator();
+        MatOfPoint wrapper = contours.get(0);
+        double maxArea = contourArea(wrapper);
+        while(each.hasNext()){
+            wrapper = each.next();
+            double area = contourArea(wrapper);
+            if(area < maxArea){
+                each.remove();
+            }
+        }
+    }
+
+    private boolean pointIsCenter(Point previous, Point current){
+        //
         if( (previous.x - current.x) / frame.width() > MAX_DEVITATION){
             return false;
         }
@@ -117,6 +116,7 @@ public class TargetDetecter implements Runnable{
     }
 
     public PointF getFlyPoint(){
+        //return to TapFlyMission
         if(!capture.isOpened()){
             //? show "Livestream start with error, please try again or exit."
         }
@@ -130,43 +130,4 @@ public class TargetDetecter implements Runnable{
         float yF = ((float) y);
         return new PointF( xF, yF);
     }
-
-
-    @Override
-    public void run() {
-
-        //? read in
-        //way 1: through DJI's livestreamer to get rtsp url
-        //way 2: thourgh opencv's videocapture(1) method
-        //way 3: through opencv's camera class extend from java module
-
-        if(!capture.isOpened()){
-            //? show "Livestream start with error, please try again or exit."
-        }
-        else{
-            FrameCnt = 0;
-            boolean FirstStart = true;
-            while(capture.read(frame)){
-                //select frames for speed up
-                if(FrameCnt != MAX_DEALING_FRAMES){
-                    FrameCnt++;
-                }
-                else{
-                    FrameCnt = 0;
-
-                    currentCenter = getCurrentPoint(frame);
-
-                    if(FirstStart){
-                        previousValidCenter = currentCenter;
-                    }
-                    isCenterPointValid = pointIsValid(previousValidCenter, currentCenter);
-
-                    if(isCenterPointValid){
-
-                    }
-                }
-            }
-        }
-    }
-
 }

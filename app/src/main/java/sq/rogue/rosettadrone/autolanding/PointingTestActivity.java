@@ -20,8 +20,6 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
-import org.greenrobot.eventbus.EventBus;
-
 import dji.common.error.DJIError;
 import dji.common.mission.tapfly.TapFlyExecutionState;
 import dji.common.mission.tapfly.TapFlyMission;
@@ -42,6 +40,7 @@ public class PointingTestActivity extends DemoBaseActivity implements SurfaceTex
 
     private TargetDetecter targetDetecter = new TargetDetecter();
 
+    //----------------view----------------
     private ImageButton mPushDrawerIb;
     private SlidingDrawer mPushDrawerSd;
     private Button mStartBtn;
@@ -62,8 +61,6 @@ public class PointingTestActivity extends DemoBaseActivity implements SurfaceTex
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.activity_pointing_test);
         super.onCreate(savedInstanceState);
-        //autoLanding eventbus
-        EventBus.getDefault().register(this);
 
         initUI();
         getTapFlyOperator().addListener(new TapFlyMissionOperatorListener() {
@@ -117,18 +114,13 @@ public class PointingTestActivity extends DemoBaseActivity implements SurfaceTex
 
     @Override
     protected void onDestroy() {
-
         if(mCodecManager != null){
             mCodecManager.destroyCodec();
         }
-        EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 
-    //autoLanding eventbus
-    public void onEventMainThread(Event event){
 
-    }
 
     /**
      * @Description : RETURN BTN RESPONSE FUNCTION
@@ -223,9 +215,6 @@ public class PointingTestActivity extends DemoBaseActivity implements SurfaceTex
         //
         return targetDetecter.getFlyPoint();
     }
-
-    //use eventbus
-
 
     private void showPointByTapFlyPoint(final PointF point, final ImageView iv) {
         if (point == null || iv == null) {

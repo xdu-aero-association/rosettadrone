@@ -85,7 +85,7 @@
 
                 <TextView
                     android:id="@+id/pointing_push_tv"
-                    style="@style/test_text"
+                    style="@style/TextAppearance.AppCompat.Medium"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
                     android:scrollbars="vertical"
@@ -158,7 +158,7 @@
             android:progress="1"/>
 
         <TextView
-            style="@style/test_text"
+            style="@style/TextAppearance.AppCompat.Medium"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
@@ -168,7 +168,7 @@
             android:id="@+id/textView" />
 
         <TextView
-            style="@style/test_text"
+            style="@style/TextAppearance.AppCompat.Medium"
             android:id="@+id/pointing_speed_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

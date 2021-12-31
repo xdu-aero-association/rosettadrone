@@ -247,7 +247,7 @@
 
                 <TextView
                     android:id="@+id/tracking_push_tv"
-                    style="@style/test_text"
+                    style="@style/TextAppearance.AppCompat.Medium"
                     android:layout_width="210dp"
                     android:layout_height="wrap_content"
                     android:text="@string/push_info" />

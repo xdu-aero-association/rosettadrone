@@ -85,6 +85,10 @@
     <string name="demo_desc_pointing">TapFly Mission</string>
     <string name="popup_picker_finish">Finish</string>
     <string name="popup_picker_trigger">Trigger</string>
+    <string name="autolanding">AutoLanding</string>
+    <string name="hello_first_fragment">Hello</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
 
     <!-- Network Toggles -->
     <string name="pref_remote_gcs">Use external device for GCS</string>

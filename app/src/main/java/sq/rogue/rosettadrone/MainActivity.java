@@ -96,6 +96,7 @@ import dji.sdk.codec.DJICodecManager;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
+import sq.rogue.rosettadrone.autolanding.PointingTestActivity;
 import sq.rogue.rosettadrone.logs.LogFragment;
 import sq.rogue.rosettadrone.settings.SettingsActivity;
 import sq.rogue.rosettadrone.settings.Waypoint1Activity;
@@ -1284,6 +1285,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         startActivityForResult(intent, RESULT_HELP);
     }
 
+    private void onClickAutoLanding(View view){
+        Intent intent = new Intent(MainActivity.this, PointingTestActivity.class);
+        startActivityForResult(intent, RESULT_HELP);
+    }
 
     private void onClickGUI() {
         if (!gui_enabled) {
@@ -1556,6 +1561,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onPointerCaptureChanged(boolean hasCapture) {
         Log.e(TAG, "onPointerCaptureChanged");
     }
+
 
 
     //region GCS Timer Task
