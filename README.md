@@ -1,5 +1,7 @@
 # RosettaDrone 2 is now updated to DJI SDK 4.14 beta 1...
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7a5e3fcf265748a8af17e3545ccd4326)](https://app.codacy.com/gh/xdu-aero-association/rosettadrone?utm_source=github.com&utm_medium=referral&utm_content=xdu-aero-association/rosettadrone&utm_campaign=Badge_Grade_Settings)
+
 Rosetta Drone 2 tested on **DJI Air, Mavic 2 x and Matrice 210 V2, Mavic Pro, Mavic AIR series
 and supports Android 5.1 and newer, with DJI SDK 4.14 and Androidx lib
 

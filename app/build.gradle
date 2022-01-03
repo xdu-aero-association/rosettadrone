@@ -12,6 +12,10 @@ android {
         multiDexEnabled true
     }
 
+    lintOptions {
+        abortOnError false
+    }
+
     dexOptions {
         javaMaxHeapSize "4g"
     }
@@ -88,7 +92,7 @@ android {
 
     // We need to be restrict as we get error on newer versions...
     buildToolsVersion '30.0.2'
-    ndkVersion '22.0.7026061'
+    ndkVersion '22.1.7171670'
 
 }
 dependencies {
