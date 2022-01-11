@@ -14,6 +14,7 @@ import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
 import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
+import dji.sdk.camera.Camera;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
@@ -30,7 +31,9 @@ public class DJISimulatorApplication extends Application {
     public void setContext(Application application) {
         instance = application;
     }
-    public DJISimulatorApplication() {}
+    public DJISimulatorApplication() {
+
+    }
 
     @Override
     public Context getApplicationContext() {
@@ -56,6 +59,18 @@ public class DJISimulatorApplication extends Application {
     public static synchronized Aircraft getAircraftInstance() {
         if (!isAircraftConnected()) return null;
         return (Aircraft) getProductInstance();
+    }
+
+    //auto landing
+    public static synchronized Camera getCameraInstance() {
+
+        if (getProductInstance() == null) return null;
+
+        Camera camera = null;
+        if (getProductInstance() instanceof Aircraft){
+            camera = ((Aircraft) getProductInstance()).getCamera();
+        }
+        return camera;
     }
 
     @Override

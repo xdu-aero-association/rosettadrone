@@ -388,7 +388,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:layout_marginBottom="12dp"
-                    android:visibility="invisible" >
+                    android:visibility="invisible">
 
                 </dji.ux.widget.TakeOffWidget>
 
@@ -398,15 +398,6 @@
                     android:layout_marginTop="12dp" />
 
             </LinearLayout>
-
-            <Button
-                android:id="@+id/button2"
-                android:layout_width="107dp"
-                android:layout_height="99dp"
-                android:onClick="onClickAutoLanding"
-                android:text="@string/autolanding"
-                app:layout_anchor="@+id/linearLayout2"
-                app:layout_anchorGravity="end|top" />
 
             <Button
                 android:id="@+id/btn_AI_start"

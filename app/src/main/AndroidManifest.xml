@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="sq.rogue.rosettadrone">
-
     <!-- DJI SDK need permission -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -18,25 +17,26 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
+    <uses-permission
+        android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
         tools:ignore="ProtectedPermissions" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
-    <uses-feature android:name="android.hardware.usb.host"
+    <uses-feature
+        android:name="android.hardware.usb.host"
         android:required="false" />
-    <uses-feature android:name="android.hardware.usb.accessory"
+    <uses-feature
+        android:name="android.hardware.usb.accessory"
         android:required="true" />
     <uses-feature
         android:glEsVersion="0x00020000"
         android:required="true" />
-
     <!--
     <uses-permission
         android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
         tools:ignore="ProtectedPermissions" />
-       -->
-
+    -->
     <uses-permission
         android:name="android.permission.CHANGE_CONFIGURATION"
         tools:ignore="ProtectedPermissions" />
@@ -45,89 +45,45 @@
         tools:ignore="ProtectedPermissions" />
 
     <application
-        android:name="sq.rogue.rosettadrone.RDApplication"
+        android:name=".RDApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
-            android:name="sq.rogue.rosettadrone.ConnectionActivity"
+            android:name=".ConnectionActivity"
             android:launchMode="singleTop">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                    <category android:name="android.intent.category.LAUNCHER" />
-                    <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
-                </intent-filter>
-
-                <!--  Spesify a spesific USB devide... can be used if one only whants to connect to a unique device... -->
-            <meta-data
-                android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
-                android:resource="@xml/accessory_filter" />
-
-        </activity>
-
-        <activity android:name="sq.rogue.rosettadrone.MainActivity">
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name="sq.rogue.rosettadrone.settings.SettingsActivity"
-            android:theme="@style/AppTheme.Settings"
-            android:label="Settings">
-        </activity>
-
-        <activity android:name="sq.rogue.rosettadrone.settings.Waypoint1Activity">
-        </activity>
-
-        <activity android:name="sq.rogue.rosettadrone.settings.Waypoint2Activity">
-        </activity>
-
-        <!-- autolanding -->
-        <activity
-            android:name="sq.rogue.rosettadrone.autolanding.AutoLandingActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_mainactivity"
-            android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
 
-            <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
             </intent-filter>
 
+            <!-- Spesify a spesific USB devide... can be used if one only whants to connect to a unique device... -->
             <meta-data
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
-
         </activity>
-
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
+            </intent-filter>
+        </activity>
         <activity
-            android:name="sq.rogue.rosettadrone.autolanding.PointingTestActivity"
-            android:label="@string/title_activity_pointing_test"
-            android:launchMode="singleInstance"
-            android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen" >
-        </activity>
+            android:name=".settings.SettingsActivity"
+            android:label="Settings"
+            android:theme="@style/AppTheme.Settings" />
+        <activity android:name=".settings.Waypoint1Activity" />
+        <activity android:name=".settings.Waypoint2Activity" /> <!-- autolanding -->
 
         <service
             android:name="dji.sdk.sdkmanager.DJIGlobalService"
-            tools:ignore="Instantiatable">
-        </service>
-
-        <service android:name="sq.rogue.rosettadrone.video.VideoService">
-        </service>
-
-        <!-- DJI SDK needed also by emulator, this is a problem... -->
+            tools:ignore="Instantiatable" />
+        <service android:name=".video.VideoService" /> <!-- DJI SDK needed also by emulator, this is a problem... -->
         <uses-library
             android:name="com.android.future.usb.accessory"
             android:required="false" />
@@ -137,16 +93,13 @@
 
         <meta-data
             android:name="com.dji.sdk.API_KEY"
-            android:value="@string/dji_key" />
-        <!-- DJI SDK -->
-
+            android:value="@string/dji_key" /> <!-- DJI SDK -->
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_key" />
     </application>
-</manifest>
 
+</manifest>

@@ -1,8 +1,12 @@
 package sq.rogue.rosettadrone.autolanding;
 
 import android.graphics.PointF;
-import android.view.View;
+
 import static org.opencv.imgproc.Imgproc.*;
+
+import androidx.annotation.Nullable;
+
+import org.greenrobot.eventbus.EventBus;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -13,39 +17,89 @@ import org.opencv.videoio.VideoCapture;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import dji.sdk.flightcontroller.FlightController;
-import dji.sdk.flighthub.model.LiveStream;
-import sq.rogue.rosettadrone.DroneModel;
 
+import dji.common.camera.CameraVideoStreamSource;
+import dji.common.error.DJIError;
+import dji.common.gimbal.Rotation;
+import dji.common.gimbal.RotationMode;
+import dji.common.mission.tapfly.TapFlyExecutionState;
+import dji.common.mission.tapfly.TapFlyMission;
+import dji.common.mission.tapfly.TapFlyMissionState;
+import dji.common.mission.tapfly.TapFlyMode;
+import dji.common.util.CommonCallbacks;
+import dji.sdk.base.BaseProduct;
+import dji.sdk.camera.Camera;
+import dji.sdk.camera.VideoFeeder;
+import dji.sdk.codec.DJICodecManager;
+import dji.sdk.gimbal.Gimbal;
+import dji.sdk.mission.tapfly.*;
+import dji.sdk.sdkmanager.DJISDKManager;
+import sq.rogue.rosettadrone.RDApplication;
 
-public class TargetDetecter {
-
-    //for read in
-    LiveStream liveStream = new LiveStream();
-    String rtmpURL;                 //? not use
-    VideoCapture capture;
-    private int FrameCnt;
-    private int MAX_DEALING_FRAMES = 30;
+public class TargetDetecter implements Runnable {
 
     //for image process
     private Mat frame = new Mat();
     private List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-    private int MaxCircleNum;
-    private double[] Circles;
+    private int FRAME_SPACING = 5;
+    private int FRAME_RESULT_VALID = 5;
+    private int FRAME_IN_ONCE = 50;
 
     //for getting target center point
     private Point currentCenter;
-    private Point previousValidCenter;
-    boolean isCenterPointValid;
     private double MAX_DEVITATION = 0.01;
-    View parent;
+    private static final float MIN_HEIGHT = 30;
+
+    //for getting video src
+    private BaseProduct product;
+    private Camera camera;
+    private VideoFeeder.VideoFeed videoFeed;
+    public VideoFeeder.VideoDataListener videoDataListener;
+    private DJICodecManager codecManager;
 
     public TargetDetecter(){
-        rtmpURL = liveStream.getRtmpURL();
-        capture = new VideoCapture(rtmpURL);
+        product = RDApplication.getProductInstance();
+        if(product == null) {
+
+        } else{
+
+        }
+        camera = RDApplication.getProductInstance().getCamera();
+        if (camera != null){
+            // Reset the callback
+            VideoFeeder.getInstance().getPrimaryVideoFeed().removeVideoDataListener(videoDataListener);
+            camera.setCameraVideoStreamSourceCallback(new CameraVideoStreamSource.Callback() {
+                @Override
+                public void onUpdate(CameraVideoStreamSource cameraVideoStreamSource) {
+
+                }
+            });
+        }
     }
 
-    private Point getCurrentPoint(Mat frame){
+    @Override
+    public void run() {
+        while(true){
+            EventBus.getDefault().post(new TargetPointResultEvent(getFlyPoint(), isTargetInVision()));
+        }
+        //receiver: firstStageController flight control
+    }
+
+    //-------------------------Target Detection-------------------------
+
+    public PointF getFlyPoint(){
+        //used in TapFlyMission directly
+        getVideoData(frame);
+        currentCenter = getTargetPoint(frame);
+            //???official
+        double x = currentCenter.x/frame.size().width;
+        double y = currentCenter.y/frame.size().height;
+        float xF = ((float) x);
+        float yF = ((float) y);
+        return new PointF( xF, yF);
+    }
+
+    private Point getTargetPoint(Mat frame){
 
         Mat GrayFrame = new Mat();
         Mat BinaryFrame = new Mat();
@@ -53,10 +107,6 @@ public class TargetDetecter {
         Mat labels = new Mat();
         Mat stats = new Mat();
         Mat centroids = new Mat();
-
-        /*
-        Please use the target object as same as the one we recommend to get better image process.
-         */
 
         //RGB 2 gray
         cvtColor(frame, GrayFrame, COLOR_RGB2GRAY);
@@ -73,12 +123,15 @@ public class TargetDetecter {
         connectedComponentsWithStats(BinaryFrame, labels, stats, centroids);
         getBiggestContours(contours);
         int max = getBiggestContoursNumber(contours);
+        if(max == 0) {
+            return null;
+        }
 
         //get center
-        Moments mMoments = moments(contours.get(max));
-        Point mMomentsP = new Point(mMoments.m10 / mMoments.m00, mMoments.m01 / mMoments.m00);
+        Moments Moments = moments(contours.get(max));
+        Point targetPoint = new Point(Moments.m10 / Moments.m00, Moments.m01 / Moments.m00);
 
-        return mMomentsP;
+        return targetPoint;
     }
 
     private int getBiggestContoursNumber(List<MatOfPoint> contours) {
@@ -107,27 +160,57 @@ public class TargetDetecter {
         }
     }
 
-    private boolean pointIsCenter(Point previous, Point current){
-        //
-        if( (previous.x - current.x) / frame.width() > MAX_DEVITATION){
-            return false;
+    private boolean isTargetInVision() {
+
+        int spacingFrame;
+        int validFrame = 0;
+        int countFrameInOnce = 0;
+
+        while(countFrameInOnce != FRAME_IN_ONCE) {
+            getVideoData(frame);
+            spacingFrame = 0;
+            while(spacingFrame != FRAME_SPACING) {
+                if(getTargetPoint(frame) != null) {
+                    validFrame ++;
+                }
+                spacingFrame ++;
+                countFrameInOnce ++;
+            }
         }
-        return true;
+
+        if(validFrame > FRAME_RESULT_VALID) {
+            return true;
+        }
+        return false;
     }
 
-    public PointF getFlyPoint(){
-        //return to TapFlyMission
-        if(!capture.isOpened()){
-            //? show "Livestream start with error, please try again or exit."
-        }
-        else{
-            capture.read(frame);
-            currentCenter = getCurrentPoint(frame);
-        }
-        double x = currentCenter.x/frame.size().width;
-        double y = currentCenter.y/frame.size().height;
-        float xF = ((float) x);
-        float yF = ((float) y);
-        return new PointF( xF, yF);
+
+//    private boolean pointIsCenter(Point previous, Point current){
+//        //
+//        if( (previous.x - current.x) / frame.width() > MAX_DEVITATION){
+//            return false;
+//        }
+//        return true;
+//    }
+
+//    private boolean isTargetPointValid() {
+//
+//        return true;
+//    }
+
+
+    //-------------------------Get Video Source-------------------------
+    private void getVideoData(Mat frame) {
+            //???
+        videoDataListener = new VideoFeeder.VideoDataListener() {
+            @Override
+            public void onReceive(byte[] videoBuffer, int size) {
+                if(codecManager != null){
+                    codecManager.sendDataToDecoder(videoBuffer, size);
+                }
+                frame.put(100, 100, videoBuffer);
+            }
+        };
     }
+
 }
