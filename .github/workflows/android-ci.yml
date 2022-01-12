@@ -2,9 +2,15 @@ name: Android CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
+    - master
+    - work
+    - add-feature
   pull_request:
-    branches: [ master ]
+    branches:
+    - master
+    - work
+    - add-feature
 
 jobs:
   build:
