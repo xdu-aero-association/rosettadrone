@@ -21,6 +21,16 @@ and supports Android 5.1 and newer, with DJI SDK 4.15.2 and Androidx lib.
 
 ### **Please create issues and create PR on this fork.**
 
+## IMPORTANT: Install `git lfs`
+
+This repository uses Git Large File Storage (`git lfs`) for JNI lib storage. Please install `git lfs` from [here](https://github.com/git-lfs/git-lfs/wiki/Installation).
+
+After `git lfs` installation, you can clone or pull just like normal repository.
+
+Click [here](https://github.com/git-lfs/git-lfs/wiki/Tutorial) for more information on `git lfs`.
+
+>NOTE: You CANNOT use **DOWNLOAD** feature because it does not automatically pull from `git lfs`. Please use `git clone`. If you want to clone only latest commit, you can use `--depth 1` option of `git clone`.
+
 ![Image of Opening screen](images/IMG_4176.png)
 Opening screen, requires DJI login first time...
 
