@@ -6,7 +6,7 @@
 
 ## Repo Information
 
-![stars](https://img.shields.io/github/stars/XDU-Educational-UAV/Drone_APP.svg) ![forks](https://img.shields.io/github/forks/XDU-Educational-UAV/Drone_APP.svg) ![tag](https://img.shields.io/github/tag/XDU-Educational-UAV/Drone_APP.svg) ![release](https://img.shields.io/github/release/XDU-Educational-UAV/Drone_APP.svg) ![issues](https://img.shields.io/github/issues/XDU-Educational-UAV/Drone_APP.svg)
+![stars](https://img.shields.io/github/stars/xdu-aero-association/rosettadrone.svg) ![forks](https://img.shields.io/github/forks/xdu-aero-association/rosettadrone.svg) ![tag](https://img.shields.io/github/tag/xdu-aero-association/rosettadrone.svg) ![release](https://img.shields.io/github/release/xdu-aero-association/rosettadrone.svg) ![issues](https://img.shields.io/github/issues/xdu-aero-association/rosettadrone.svg)
 
 ## CI Status
 
