@@ -1,9 +1,11 @@
 package sq.rogue.rosettadrone;
-
 // Acknowledgements:
 // IP address validation: https://stackoverflow.com/questions/3698034/validating-ip-in-android/11545229#11545229
 // Hide keyboard: https://stackoverflow.com/questions/16495440/how-to-hide-keyboard-by-default-and-show-only-when-click-on-edittext
 // MenuItemTetColor: RPP @ https://stackoverflow.com/questions/31713628/change-menuitem-text-color-programmatically
+
+import static com.google.android.material.snackbar.Snackbar.LENGTH_LONG;
+import static sq.rogue.rosettadrone.util.safeSleep;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -41,18 +43,25 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.PreferenceManager;
+
 import com.MAVLink.MAVLinkPacket;
 import com.MAVLink.Messages.MAVLinkMessage;
 import com.MAVLink.Parser;
-
-import com.google.android.gms.maps.CameraUpdateFactory;
+import com.amap.api.maps2d.AMap;
+import com.amap.api.maps2d.CameraUpdateFactory;
+import com.amap.api.maps2d.MapView;
+import com.amap.api.maps2d.model.BitmapDescriptorFactory;
+import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps2d.model.Marker;
+import com.amap.api.maps2d.model.MarkerOptions;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -78,11 +87,6 @@ import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.preference.PreferenceManager;
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
@@ -103,8 +107,18 @@ import sq.rogue.rosettadrone.settings.Waypoint2Activity;
 import sq.rogue.rosettadrone.video.NativeHelper;
 import sq.rogue.rosettadrone.video.VideoService;
 
-import static com.google.android.material.snackbar.Snackbar.LENGTH_LONG;
-import static sq.rogue.rosettadrone.util.safeSleep;
+//import com.google.android.gms.maps.CameraUpdateFactory;
+//import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+//import com.google.android.gms.maps.model.LatLng;
+//import com.google.android.gms.maps.model.Marker;
+//import com.google.android.gms.maps.model.MarkerOptions;
+//修改一下用到的东西
+//import com.amap.api.maps2d.AMap;
+//import com.amap.api.maps2d.CameraUpdate;
+//import com.amap.api.maps2d.CameraUpdateFactory;
+//import com.amap.api.maps2d.model.BitmapDescriptorFactory;
+//import com.amap.api.maps2d.model.MarkerOptions;
+
 
 //public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -130,7 +144,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public static boolean FLAG_APP_NAME_CHANGED = false;
     public static boolean FLAG_MAPS_CHANGED = false;
 
-    private GoogleMap  aMap;
+
+    //private GoogleMap  aMap;
+    private AMap aMap;
     private double droneLocationLat, droneLocationLng;
     private Marker droneMarker = null;
 
@@ -169,6 +185,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean mIsBound;
     private int m_videoMode = 1;
     private int mMaptype = GoogleMap.MAP_TYPE_HYBRID;
+    //const donot change
+    private MapView mapView;
 
     private VideoFeeder.VideoFeed standardVideoFeeder;
     protected VideoFeeder.VideoDataListener mReceivedVideoDataListener;
@@ -445,13 +463,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onDestroy();
     }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-
+    //@Override
+    //public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(AMap googleMap) {//我就是懒狗，不改了
         Log.d(TAG, "onMapReady()");
 
         if (aMap == null) {
-            aMap = googleMap;
+            aMap = mapView.getMap();
+            // aMap = googleMap;
             LinearLayout map_layout = findViewById(R.id.map_view);
             map_layout.setClickable(true);
             map_layout.setOnClickListener((map) -> {
@@ -1555,6 +1574,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
         Log.e(TAG, "onPointerCaptureChanged");
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+
     }
 
 

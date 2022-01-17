@@ -15,25 +15,28 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
+
+import com.amap.api.maps2d.AMap;
+import com.amap.api.maps2d.CameraUpdate;
+import com.amap.api.maps2d.CameraUpdateFactory;
+import com.amap.api.maps2d.MapView;
+import com.amap.api.maps2d.model.BitmapDescriptorFactory;
+import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps2d.model.Marker;
+import com.amap.api.maps2d.model.MarkerOptions;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
 import dji.common.error.DJIError;
 import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointMission;
@@ -56,13 +59,28 @@ import sq.rogue.rosettadrone.DJISimulatorApplication;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 
+//import com.google.android.gms.maps.CameraUpdate;
+//import com.google.android.gms.maps.CameraUpdateFactory;
+//import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+//import com.google.android.gms.maps.model.LatLng;
+//import com.google.android.gms.maps.model.Marker;
+//import com.google.android.gms.maps.model.MarkerOptions;
+//import com.amap.api.maps2d.AMap;
+//import com.amap.api.maps2d.CameraUpdate;
+//import com.amap.api.maps2d.CameraUpdateFactory;
+//import com.amap.api.maps2d.model.BitmapDescriptorFactory;
+//import com.amap.api.maps2d.model.MarkerOptions;
+
+
 //public class HelpActivity extends AppCompatActivity implements OnMapReadyCallback{
 //public class HelpActivity extends AppCompatActivity implements PreferenceFragmentCompat.OnPreferenceStartScreenCallback, OnMapReadyCallback{
-public class MapActivity extends FragmentActivity implements View.OnClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback {
+public class MapActivity extends FragmentActivity implements View.OnClickListener, AMap.OnMapClickListener, OnMapReadyCallback {
     private static final String TAG = MapActivity.class.getSimpleName();
 
-    private GoogleMap gMap;
-
+    //private GoogleMap gMap;
+    private AMap gMap;
+    private MapView mapView;
+    private AMap aMap;
     private Button locate, add, clear, exit;
     private Button config, upload, start, stop;
 
@@ -282,10 +300,10 @@ public class MapActivity extends FragmentActivity implements View.OnClickListene
 
     private void setUpMap() {
         gMap.setOnMapClickListener(this);// add the listener for click for amap object
-
+        //aMap.setOnMapClickListener();
     }
 
-    @Override
+    //@Override
     public void onMapClick(LatLng point) {
         if (isAdd == true) {
             markWaypoint(point);
@@ -337,6 +355,7 @@ public class MapActivity extends FragmentActivity implements View.OnClickListene
         markerOptions.position(point);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
         Marker marker = gMap.addMarker(markerOptions);
+        //Marker marker = aMap.addMarker(markerOptions);
         mMarkers.put(mMarkers.size(), marker);
     }
 
@@ -581,11 +600,12 @@ public class MapActivity extends FragmentActivity implements View.OnClickListene
 
     }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
+    //@Override
+    public void onMapReady(AMap googleMap) {
 
         if (gMap == null) {
-            gMap = googleMap;
+            gMap = mapView.getMap();
+            //gMap = googleMap;
             setUpMap();
         }
         LatLng shenzhen = new LatLng(22.5362, 113.9454);
@@ -598,6 +618,21 @@ public class MapActivity extends FragmentActivity implements View.OnClickListene
         super.onBackPressed();
         setTitle(R.string.settings);
     }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+
+    }
+
+    //@Override
+    //public void onMapClick(com.amap.api.maps2d.model.LatLng latLng) {
+
+    //}
+
+    //@Override
+    //public void onMapReady(GoogleMap googleMap) {
+
+    //}
 }
 
 
