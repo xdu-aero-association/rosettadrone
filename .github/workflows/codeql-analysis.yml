@@ -13,10 +13,16 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ master ]
+    branches:
+    - master
+    - work
+    - add-feature
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ master ]
+    branches:
+    - master
+    - work
+    - add-feature
   schedule:
     - cron: '15 13 * * 5'
 
@@ -32,13 +38,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'java', 'python' ]
+        language: [ 'java', 'python' ]
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://git.io/codeql-language-support
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: generate lfs file list
+      run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+    - name: restore lfs cache
+      uses: actions/cache@v2
+      id: lfs-cache
+      with:
+        path: .git/lfs
+        key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}-v1
+    - name: pull lfs files
+      run: git lfs pull
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
