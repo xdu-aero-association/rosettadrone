@@ -11,9 +11,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +23,10 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -136,10 +137,10 @@ public class WaypointV2ActionDialog extends DialogFragment implements ITriggerCa
     }
 
     private void initView() {
-        rvAddedAction.setLayoutManager(new LinearLayoutManager(getContext()));
-        rvAddedAction.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayout.HORIZONTAL));
+        rvAddedAction.setLayoutManager(new LinearLayoutManager(getActivity()));
+        rvAddedAction.addItemDecoration(new DividerItemDecoration(getActivity(), LinearLayout.HORIZONTAL));
 
-        actionAdapter = new WaypointActionAdapter(getContext(), new ArrayList<>());
+        actionAdapter = new WaypointActionAdapter(getActivity(), new ArrayList<>());
         rvAddedAction.setAdapter(actionAdapter);
 
         ArrayAdapter<String> triggerAdapter = new ArrayAdapter(getActivity(),

@@ -84,11 +84,11 @@ public class GimbalActuatorFragment extends Fragment implements IActuatorCallbac
     }
 
     public void flush() {
-        if (getContext() == null) {
+        if (getActivity() == null) {
             return;
         }
         if (callback.getTrigger() == null) {
-            Toast.makeText(getContext(), "please select trigger.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "please select trigger.", Toast.LENGTH_SHORT).show();
             rbAircraftControlGimbal.setVisibility(View.GONE);
             rbRotateGimbal.setVisibility(View.VISIBLE);
             return;

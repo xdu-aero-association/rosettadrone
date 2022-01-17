@@ -17,24 +17,26 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
+
+import com.amap.api.maps2d.AMap;
+import com.amap.api.maps2d.CameraUpdate;
+import com.amap.api.maps2d.CameraUpdateFactory;
+import com.amap.api.maps2d.model.BitmapDescriptorFactory;
+import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps2d.model.Marker;
+import com.amap.api.maps2d.model.MarkerOptions;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightControllerState;
 import dji.common.mission.waypoint.Waypoint;
@@ -58,11 +60,18 @@ import sq.rogue.rosettadrone.DJISimulatorApplication;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 
-public class Waypoint1Activity extends FragmentActivity implements View.OnClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback {
+//import com.google.android.gms.maps.CameraUpdate;
+//import com.google.android.gms.maps.CameraUpdateFactory;
+//import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+//import com.google.android.gms.maps.model.LatLng;
+//import com.google.android.gms.maps.model.Marker;
+//import com.google.android.gms.maps.model.MarkerOptions;
+
+public class Waypoint1Activity extends FragmentActivity implements View.OnClickListener, AMap.OnMapClickListener, OnMapReadyCallback {
 
     protected static final String TAG = "GSDemoActivity";
 
-    private GoogleMap gMap;
+    private AMap gMap;
 
     private Button locate, add, clear;
     private Button config, upload, start, stop;
@@ -281,7 +290,7 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
 
     }
 
-    @Override
+    //@Override
     public void onMapClick(LatLng point) {
         if (isAdd == true) {
             markWaypoint(point);
@@ -572,8 +581,8 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
 
     }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
+    //@Override
+    public void onMapReady(AMap googleMap) {
         if (gMap == null) {
             gMap = googleMap;
             setUpMap();
@@ -584,4 +593,13 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         gMap.moveCamera(CameraUpdateFactory.newLatLng(shenzhen));
     }
 
+    //@Override
+    //public void onMapClick(com.amap.api.maps2d.model.LatLng latLng) {
+
+    //}
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+
+    }
 }
