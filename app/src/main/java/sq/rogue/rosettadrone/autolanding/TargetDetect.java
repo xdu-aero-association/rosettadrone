@@ -65,7 +65,7 @@ public class TargetDetect extends TimerTask implements Runnable {
     private VideoFeeder.VideoFeed videoFeed;
     public VideoFeeder.VideoDataListener videoDataListener;
     public DJICodecManager codecManager;
-    private int videoWidth;
+    private int videoWidth = -1;
     private int videoHeight;
     private byte[] RGBAData = null;
 
@@ -204,7 +204,7 @@ public class TargetDetect extends TimerTask implements Runnable {
     }
 
     //-------------------------Get Video Source-------------------------
-    public void getVideoData() {
+    public int getVideoData() {
         videoWidth = codecManager.getVideoWidth();
         videoHeight = codecManager.getVideoHeight();
         RGBAData = codecManager.getRgbaData(videoWidth, videoHeight);
@@ -213,5 +213,6 @@ public class TargetDetect extends TimerTask implements Runnable {
         if(frame == null) {
             Log.d(TAG, "The Mat frame is null!");
         }
+        return videoWidth;
     }
 }
