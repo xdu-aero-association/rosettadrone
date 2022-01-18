@@ -209,8 +209,8 @@ public class SecondStageController implements Runnable{
         float pitch = 45;
         PointF preTargetPoint = null;
         PointF curTargetPoint = null;
-        float ka = 0.1f;
-        float kb = 0.1f;
+        float ka = 5f;
+        float kb = 8f;
         RotationMode rotationMode;
 
         GimbalRotateTask(PointF inTargetPoint) {

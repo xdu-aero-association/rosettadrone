@@ -91,6 +91,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private Button targetBtn;
     private Button gimbalBtn;
     private Button precisionLandingBtn;
+    private Button targetClassBtn;
     private ImageView imageView;
     protected TextureView videoSurface = null;
 
@@ -210,6 +211,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         targetBtn = findViewById(R.id.targetBtn);
         gimbalBtn = findViewById(R.id.gimbalBtn);
         precisionLandingBtn = findViewById(R.id.precisionLandingBtn);
+        targetClassBtn = findViewById(R.id.targetClassBtn);
 
         takeoffBtn.setOnClickListener(this);
         testBtn.setOnClickListener(this);
@@ -217,6 +219,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         targetBtn.setOnClickListener(this);
         gimbalBtn.setOnClickListener(this);
         precisionLandingBtn = findViewById(R.id.precisionLandingBtn);
+        targetClassBtn.setOnClickListener(this);
 
         videoSurface = findViewById(R.id.videoPreviewerSurface);
         if(videoSurface != null) {
@@ -262,6 +265,11 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 PrecisionLandingController precisionLandingController = new PrecisionLandingController();
                 precisionLandingController.startPrecisionLanding();
                 break;
+            }
+            case R.id.targetClassBtn: {
+                TargetDetect targetDetectionTask = new TargetDetect();
+                Timer timerTargetDetection = new Timer();
+                timerTargetDetection.schedule(targetDetectionTask, 0, 100);
             }
             default: break;
         }

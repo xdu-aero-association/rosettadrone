@@ -43,6 +43,11 @@
             android:layout_height="wrap_content"
             android:text="precsland"
             android:id="@+id/precisionLandingBtn"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="targetClass"
+            android:id="@+id/targetClassBtn"/>
     </LinearLayout>
 
     <LinearLayout

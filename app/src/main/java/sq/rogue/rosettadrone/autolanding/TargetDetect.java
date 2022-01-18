@@ -63,7 +63,6 @@ public class TargetDetect extends TimerTask implements Runnable {
     public Point targetPoint = null;
 
     private VideoFeeder.VideoFeed videoFeed;
-    public VideoFeeder.VideoDataListener videoDataListener;
     public DJICodecManager codecManager;
     private int videoWidth = -1;
     private int videoHeight;
