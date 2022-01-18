@@ -1,29 +1,39 @@
-# RosettaDrone 2 is now updated to DJI SDK 4.14 beta 1...
+# RosettaDrone 2 is now updated to DJI SDK 4.15.2
+
+## Codacy Badge
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7a5e3fcf265748a8af17e3545ccd4326)](https://app.codacy.com/gh/xdu-aero-association/rosettadrone?utm_source=github.com&utm_medium=referral&utm_content=xdu-aero-association/rosettadrone&utm_campaign=Badge_Grade_Settings)
 
-Rosetta Drone 2 tested on **DJI Air, Mavic 2 x and Matrice 210 V2, Mavic Pro, Mavic AIR series
-and supports Android 5.1 and newer, with DJI SDK 4.14 and Androidx lib
+## Repo Information
+
+![stars](https://img.shields.io/github/stars/xdu-aero-association/rosettadrone.svg) ![forks](https://img.shields.io/github/forks/xdu-aero-association/rosettadrone.svg) ![tag](https://img.shields.io/github/tag/xdu-aero-association/rosettadrone.svg) ![release](https://img.shields.io/github/release/xdu-aero-association/rosettadrone.svg) ![issues](https://img.shields.io/github/issues/xdu-aero-association/rosettadrone.svg)
+
+## CI Status
+
+![Android CI](https://github.com/xdu-aero-association/rosettadrone/actions/workflows/android-ci.yml/badge.svg) ![CodeQL Analysis](https://github.com/xdu-aero-association/rosettadrone/actions/workflows/codeql-analysis.yml/badge.svg) ![Super Linter](https://github.com/xdu-aero-association/rosettadrone/actions/workflows/super-linter.yml/badge.svg)
+
+Rosetta Drone 2 tested on **DJI Air, Mavic 2 x and Matrice 210 V2, Mavic Pro, Mavic 2 Enterprise Advanced, Mavic AIR series**
+and supports Android 5.1 and newer, with DJI SDK 4.15.2 and Androidx lib.
 
 =======
 
-## The project works with QGroundcontrol, goto and joystic is implemented.
+## The project works with QGroundcontrol, goto and joystic is implemented
 
-### **Please create issues and create PR on this fork.** 
+### **Please create issues and create PR on this fork.**
 
 ![Image of Opening screen](images/IMG_4176.png)
 Opening screen, requires DJI login first time...
-  
 
 This version has implemented the new video stream method in DJI SDK that require quite a few modifications. It also includes all the latest libraries, and Androidx.
-In the unstable code there is also the DJI simulator, to enable testing in the lab. Android Studio is now updated to 3.6
+In the unstable code there is also the DJI simulator, to enable testing in the lab. Android Studio is now updated to 2020.3.1
 
-Rosetta Drone is a Mavlink wrapper for the DJI SDK, which allows users to fly DJI drones using Mavlink-speaking ground control stations. In theory it should work with any Mavlink GCS, but all testing so far has been done with QGroundControl. 
+Rosetta Drone is a Mavlink wrapper for the DJI SDK, which allows users to fly DJI drones using Mavlink-speaking ground control stations. In theory it should work with any Mavlink GCS, but all testing so far has been done with QGroundControl.
 
-*** IMPORTANT SAFETY NOTE *** Due to imperfect translation between DJI and Mavlink, props may begin spinning at unexpected times. Always treat props as if they are live. Use Rosetta Drone's "safety" feature, which *should* prevent the drone from acknowledging unexpected GCS arm or takeoff commands.
+***IMPORTANT SAFETY NOTE***
+
+Due to imperfect translation between DJI and Mavlink, props may begin spinning at unexpected times. Always treat props as if they are live. Use Rosetta Drone's "safety" feature, which *should* prevent the drone from acknowledging unexpected GCS arm or takeoff commands.
 
 The user assumes all responsibility for prevention of harm or damage. This is an evolving, experimental app. See "Known issues" below before use.
-
 
 ![Image of Opening screen](images/MicrosoftTeams-image.png)
 DJI-Rosettadrone-QGC live over 4G-LTE
@@ -40,9 +50,9 @@ Rosetta Drone 2 on the big screen from DJI Smart Controller
 ![Image of Opening screen](images/IMG_4179.png)
 Rosetta Drone 2 on the DJI Smart Controller
 
-Latency video: 
+Latency video:
 ![Video](https://youtu.be/HAC5OpQQpDI)
-(https://youtu.be/HAC5OpQQpDI "Click to play in Youtube.com")
+(<https://youtu.be/HAC5OpQQpDI> "Click to play in Youtube.com")
 
 # Features
 
@@ -54,10 +64,6 @@ Latency video:
 * Fly from Python in DroneKit
 * Use Mavproxy to connect both QGC and DroneKit at the same time
 * Use Gstreamer/OpenCV/FFMPEG and DroneKit to create complex AI functions
-
-
-
-
 
 # Usage
 
@@ -86,44 +92,45 @@ Note that if you are using QGroundControl on the same device as Rosetta drone, t
 
 8. Support is added for Pan and Tilt of camera gimbal by using RC channel 8 and 9.
 
-###Add this to you're Dronekit python script:
+    ### Add this to you're Dronekit python script:
 
-def set_servo(servo,val):
-    msg = vehicle.message_factory.command_long_encode(
-            0, # time_boot_ms (not used)
-            0,  # target system, target component
-            mavutil.mavlink.MAV_CMD_DO_SET_SERVO, 
-            0, 
-            servo, # RC channel...
-            1500+(val*5.5), # RC value
-            0, 0, 0, 0, 0)
-    vehicle.send_mavlink(msg)
-    vehicle.flush()
-    
+    ```python
+    def set_servo(servo,val):
+        msg = vehicle.message_factory.command_long_encode(
+                0, # time_boot_ms (not used)
+                0,  # target system, target component
+                mavutil.mavlink.MAV_CMD_DO_SET_SERVO, 
+                0, 
+                servo, # RC channel...
+                1500+(val*5.5), # RC value
+                0, 0, 0, 0, 0)
+        vehicle.send_mavlink(msg)
+        vehicle.flush()
+    ```
+
     And then use: set_servo(8,-45.0) to set the gimbal....
-
 
 9. Support for **joystick** is added and tested with QGroundcontrol, using the now built in simulator.
 
 10. By taping on the drone icon 5 times, you enable test mode and can open the software with no drone connected. For GUI work.
 
-    
 # Building from source
 
 1. Clone or download the repository.
 
 2. In Android Studio, select **File->New->Import Project** and navigate to the downloaded folder.
- 
-3. Sign up for the DJI Developer Program at https://developer.dji.com/mobile-sdk/ and create an Application key. The package name should be sq.rogue.rosettadrone.
- 
+
+3. Sign up for the DJI Developer Program at <https://developer.dji.com/mobile-sdk/> and create an Application key. The package name should be sq.rogue.rosettadrone.
+
 4. Create a new file called keys.xml in the /values folder, and insert the following:
-    ```
+
+    ```xml
     <?xml version="1.0" encoding="utf-8"?>
     <resources>
         <string name="dji_key">INSERT KEY HERE</string>
     </resources>
     ```
-    
+
 5. Run **Build->Make Project**
 
 # DJI-Mavlink Translation Notes
@@ -158,12 +165,7 @@ Anyone who speaks multiple languages knows that translations are rarely perfect.
 
 - The switch C3 is now both reported as switch 3 and also performa a auto takeoff is the system is armed. This to allow flying from Rosetta Drone 2, might be reverted.
 
-
-
-
-
 # Known Issues for Users
-
 
 - If you change the UDP port while QGC is running, you may need to restart QGC.
 
@@ -172,8 +174,6 @@ Anyone who speaks multiple languages knows that translations are rarely perfect.
 - Some times the Rosetta Drone 2 stopps and restarts, work are in progress to eliminate this. Seems to be related to the Mavlik layer.
 
 - If you takeoff using the QGC, and then sett a point and hit goto, the Rosetta drone 2 enters an error state. Work are in progress. 
-
-
 
 # TODO
 
@@ -185,14 +185,9 @@ Anyone who speaks multiple languages knows that translations are rarely perfect.
 
 - Test and prepare official relase, add to play store.
 
-
-
-
-
-
 # Known Issues for Developers
 
-RosettaDrone 2 uses MAVLink code generated by the MAVLink code generator, using the ArduPilot dialect. The Java code generator contains errors (see issues [#805](https://github.com/mavlink/mavlink/issues/805) and [#806](https://github.com/mavlink/mavlink/issues/806)), and the code required manual tweaking after generation. This means that simply dropping in updated auto-generated files will likely produce errors. At the moment this seems only to apply for setting and getting double that is missing. It is quite easy to copy the float function and modify it to double. The only usage for this is for ROV wheel distance, so someone should fix that in Mavlink. 
+RosettaDrone 2 uses MAVLink code generated by the MAVLink code generator, using the ArduPilot dialect. The Java code generator contains errors (see issues [#805](https://github.com/mavlink/mavlink/issues/805) and [#806](https://github.com/mavlink/mavlink/issues/806)), and the code required manual tweaking after generation. This means that simply dropping in updated auto-generated files will likely produce errors. At the moment this seems only to apply for setting and getting double that is missing. It is quite easy to copy the float function and modify it to double. The only usage for this is for ROV wheel distance, so someone should fix that in Mavlink.
 
 The use of an ArduPilot dialect over PX4 is not intended to be a statement of preference. The author believes strongly in the importance of maintaining maximum compatibility across both projects. 
 
@@ -211,5 +206,3 @@ Rosetta Drone 2 is licensed under BSD3. For particularities related to U.S. fede
 Rosetta Drone 2 uses a modified version of DJI's [Android Video Stream Decoding Sample](https://developer.dji.com/mobile-sdk/documentation/sample-code/index.html), which is released under the MIT License.
 
 Video RTP packing uses code modified from the [libstreamer](https://github.com/fyhertz/libstreaming) library, licensed under Apache 2.
- 
-
