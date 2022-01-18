@@ -1,3 +1,0 @@
-F:/DJI/lasttime/rosettadrone/sdk/.cxx/cmake/debug/x86/CMakeFiles/opencv_jni_shared.dir
-F:/DJI/lasttime/rosettadrone/sdk/.cxx/cmake/debug/x86/CMakeFiles/edit_cache.dir
-F:/DJI/lasttime/rosettadrone/sdk/.cxx/cmake/debug/x86/CMakeFiles/rebuild_cache.dir

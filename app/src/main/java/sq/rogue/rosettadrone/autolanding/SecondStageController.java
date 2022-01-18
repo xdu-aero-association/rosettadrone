@@ -171,22 +171,17 @@ public class SecondStageController implements Runnable{
         //receive the target detection result
         targetPoint = targetPointResultEvent.targetPoint;
         setFlightControlData(targetPoint);
+        gimbalRotateTask.setTargetPoint(targetPoint);
     }
 
     public void setFlightControlData(PointF targetPoint) {
         //reset the flight control data according to the detection result
-        float rollAngleCo = 0.1f;
-        float pitchAngleCo = 0.1f;
+        float rollAngleCo = 0.05f;
+        float pitchAngleCo = 0.0000001f;
         float verticalThrottleCo = 0.1f;
 
         float altitude = ((Aircraft)RDApplication.getProductInstance()).getFlightController()
                 .getState().getAircraftLocation().getAltitude();
-
-        if(altitude < 30) {
-
-        } if(altitude < 10) {
-
-        }
 
         flightControlData = new FlightControlData(
                 altitude*pitchAngleCo,
@@ -218,15 +213,20 @@ public class SecondStageController implements Runnable{
         float kb = 0.1f;
         RotationMode rotationMode;
 
-        GimbalRotateTask(PointF targetPoint) {
+        GimbalRotateTask(PointF inTargetPoint) {
             super();
             preTargetPoint = curTargetPoint;
-            curTargetPoint = targetPoint;
+            curTargetPoint = inTargetPoint;
         }
 
         GimbalRotateTask(RotationMode rotationMode) {
             //first rotate before the precision landing start
             this.rotationMode = rotationMode;
+        }
+
+        public void setTargetPoint(PointF inTargetPoint) {
+            preTargetPoint = curTargetPoint;
+            curTargetPoint = inTargetPoint;
         }
 
         private float setPitch() {
