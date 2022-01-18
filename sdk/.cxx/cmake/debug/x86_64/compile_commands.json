@@ -1,0 +1,7 @@
+[
+{
+  "directory": "F:/DJI/lasttime/rosettadrone/sdk/.cxx/cmake/debug/x86_64",
+  "command": "D:\\Android\\Sdk\\ndk\\20.0.5594570\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=x86_64-none-linux-android22 --gcc-toolchain=D:/Android/Sdk/ndk/20.0.5594570/toolchains/llvm/prebuilt/windows-x86_64 --sysroot=D:/Android/Sdk/ndk/20.0.5594570/toolchains/llvm/prebuilt/windows-x86_64/sysroot    -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -fno-addrsig -Wa,--noexecstack -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC   -o CMakeFiles\\opencv_jni_shared.dir\\dummy.cpp.o -c F:\\DJI\\lasttime\\rosettadrone\\sdk\\libcxx_helper\\dummy.cpp",
+  "file": "F:\\DJI\\lasttime\\rosettadrone\\sdk\\libcxx_helper\\dummy.cpp"
+}
+]

@@ -23,4 +23,8 @@ public class ThreadEvent {
     public ThreadEvent(boolean isMaxAngle) {
         this.isMaxAngle = isMaxAngle;
     }
+
+    public ThreadEvent() {
+
+    }
 }

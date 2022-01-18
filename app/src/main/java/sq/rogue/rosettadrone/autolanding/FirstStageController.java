@@ -1,6 +1,5 @@
 package sq.rogue.rosettadrone.autolanding;
 
-import android.app.Activity;
 import android.graphics.PointF;
 
 import androidx.annotation.Nullable;
@@ -24,12 +23,9 @@ import dji.sdk.mission.tapfly.TapFlyMissionEvent;
 import dji.sdk.mission.tapfly.TapFlyMissionOperator;
 import dji.sdk.mission.tapfly.TapFlyMissionOperatorListener;
 import dji.sdk.sdkmanager.DJISDKManager;
-import sq.rogue.rosettadrone.RDApplication;
-import sq.rogue.rosettadrone.settings.Tools;
 
+//it is going to be abandon cause little use
 public class FirstStageController implements Runnable{
-
-    public Activity mActivity;
 
     private BaseProduct product;
     private TapFlyMission tapFlyMission;
@@ -38,26 +34,16 @@ public class FirstStageController implements Runnable{
     private float gimbalYawAngle;
     private static final float MAX_YAW_ANGLE = 90f;
     private static final float GIMBAL_ROTATE_DURATION = 2;
-
-    private Runnable targetDetection;
     private Thread targetDetectionThread;
 
-    public FirstStageController(Activity activity) {
-        product = RDApplication.getProductInstance();
-        gimbal = product.getGimbal();
-        if(product == null || gimbal == null){
-            Tools.showToast(mActivity, "Check the connection.");
-        }
+    public FirstStageController() {
         EventBus.getDefault().register(this);
-        mActivity = activity;
     }
 
     @Override
     public void run() {
         EventBus.getDefault().register(this);       //register for ThreadEvent
-
-        targetDetection = new TargetDetecter();
-        targetDetectionThread = new Thread(targetDetection, "targetDetectThread");
+        targetDetectionThread = new Thread(new TargetDetect(), "targetDetectThread");
         targetDetectionThread.start();
     }
 
@@ -78,7 +64,6 @@ public class FirstStageController implements Runnable{
             EventBus.getDefault().post(new ThreadEvent(true, targetPointResultEvent.targetPoint));
         } else {
             if(gimbalYawAngle == MAX_YAW_ANGLE) {
-                Tools.showToast(mActivity, "The target is not in the vision, precision landing failed.");
                 EventBus.getDefault().post(new ThreadEvent(true, ""));
             } else {
                 rotateGimbal();
@@ -100,8 +85,6 @@ public class FirstStageController implements Runnable{
             }
         });
     }
-
-
 
     //-------------------------TapFlyMission-------------------------
     @Subscribe(threadMode =  ThreadMode.POSTING)

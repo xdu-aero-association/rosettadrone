@@ -1,0 +1,19 @@
+{
+  "buildFiles": [
+    "D:\\Android\\Sdk\\ndk\\20.0.5594570\\build\\cmake\\android.toolchain.cmake",
+    "D:\\Android\\Sdk\\ndk\\20.0.5594570\\build\\cmake\\platforms.cmake",
+    "F:\\DJI\\lasttime\\rosettadrone\\sdk\\libcxx_helper\\CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "D:\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"F:\\DJI\\lasttime\\rosettadrone\\sdk\\.cxx\\cmake\\debug\\armeabi-v7a\" clean"
+  ],
+  "buildTargetsCommand": "D:\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe  -C \"F:\\DJI\\lasttime\\rosettadrone\\sdk\\.cxx\\cmake\\debug\\armeabi-v7a\" {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "opencv_jni_shared-Debug-armeabi-v7a": {
+      "artifactName": "opencv_jni_shared",
+      "buildCommand": "D:\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"F:\\DJI\\lasttime\\rosettadrone\\sdk\\.cxx\\cmake\\debug\\armeabi-v7a\" opencv_jni_shared",
+      "abi": "armeabi-v7a",
+      "output": "F:\\DJI\\lasttime\\rosettadrone\\sdk\\.cxx\\cmake\\debug\\armeabi-v7a\\libopencv_jni_shared.a"
+    }
+  }
+}
