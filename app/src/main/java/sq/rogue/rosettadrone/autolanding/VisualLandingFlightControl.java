@@ -16,19 +16,19 @@ import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
 import dji.common.flightcontroller.virtualstick.VerticalControlMode;
 import dji.common.flightcontroller.virtualstick.YawControlMode;
-import dji.common.gimbal.Rotation;
-import dji.common.gimbal.RotationMode;
 import dji.common.util.CommonCallbacks;
+import dji.lidar_map.my_point_3d.Point3D;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.gimbal.Gimbal;
 import dji.sdk.products.Aircraft;
 import sq.rogue.rosettadrone.RDApplication;
 
-public class SecondStageController implements Runnable{
+public class VisualLandingFlightControl implements Runnable{
 
-    private static final String TAG = "SecondStage";
+    private static final String TAG = "Visual FC control";
 
-    private boolean test = false;
+    private boolean testMode = false;
+    private Point3D target;
 
     private FlightController flightController;
     private PointF targetPoint = null;
@@ -39,14 +39,14 @@ public class SecondStageController implements Runnable{
     private FlightControlDataTask flightControlDataTask;
     private Timer timerGimbalRotation;
     private GimbalRotateTask gimbalRotateTask;
-    private Timer timerTargetDetection;
-    private TargetDetect targetDetectionTask;
+    private Thread targetDetectionThread;
 
-    public SecondStageController(boolean testStateOn) {
-        test = testStateOn;
+    VisualLandingFlightControl(boolean testMode, Point3D target) {
+        this.testMode = testMode;
+        this.target = target;
     }
 
-    public SecondStageController() {
+    VisualLandingFlightControl() {
 
     }
 
@@ -56,7 +56,7 @@ public class SecondStageController implements Runnable{
         initFlightControl();
 
         //gimbal rotate
-        gimbalRotateTask = new GimbalRotateTask(RotationMode.ABSOLUTE_ANGLE);
+        gimbalRotateTask = new GimbalRotateTask(GimbalTaskMode.ADJUST);
         timerGimbalRotation = new Timer();
         timerGimbalRotation.schedule(gimbalRotateTask, 0, 100);
 
@@ -64,17 +64,18 @@ public class SecondStageController implements Runnable{
         if(timerGimbalRotation != null) {
             timerGimbalRotation.cancel();
             timerGimbalRotation.purge();
-            timerFlightDataTask = null;
+            timerGimbalRotation = null;
         }
         if(gimbalRotateTask != null) {
             gimbalRotateTask.cancel();
-            flightControlDataTask = null;
+            gimbalRotateTask = null;
         }
 
         //build target detection task
-        targetDetectionTask = new TargetDetect();
-        timerTargetDetection = new Timer();
-        timerTargetDetection.schedule(targetDetectionTask, 0, 100);
+        if(!testMode) {
+            targetDetectionThread = new Thread(new TargetDetect());
+            targetDetectionThread.start();
+        }
 
         //EventBus register
         EventBus.getDefault().register(this);
@@ -82,11 +83,6 @@ public class SecondStageController implements Runnable{
         //build flight control task
         timerFlightDataTask = new Timer();
         timerFlightDataTask.schedule(new FlightControlDataTask(), 1000, 200);
-
-        //build gimbal rotate task
-        gimbalRotateTask = new GimbalRotateTask(targetPoint);
-        timerGimbalRotation = new Timer();
-        timerGimbalRotation.schedule(gimbalRotateTask, 0, 100);
     }
 
     private void initFlightControl() {
@@ -95,7 +91,9 @@ public class SecondStageController implements Runnable{
             flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    Log.d(TAG, "Can't start virtual stick control with error: " + djiError.getDescription());
+                    if(djiError != null) {
+                        Log.d(TAG, "Can't start virtual stick control with error: " + djiError.getDescription());
+                    }
                 }
             });
 
@@ -138,15 +136,13 @@ public class SecondStageController implements Runnable{
         flightControlDataTask = null;
 
         //target detection task cancel
-        if(targetDetectionTask != null) {
-            targetDetectionTask.cancel();
+        if(!testMode) {
+            try {
+                targetDetectionThread.interrupt();
+            } catch (Exception e) {
+
+            }
         }
-        if(timerTargetDetection != null) {
-            timerTargetDetection.cancel();
-            timerTargetDetection.purge();
-        }
-        targetDetectionTask = null;
-        timerTargetDetection = null;
 
         //eventbus unregister
         EventBus.getDefault().unregister(this);
@@ -174,101 +170,122 @@ public class SecondStageController implements Runnable{
         gimbalRotateTask.setTargetPoint(targetPoint);
     }
 
-    public void setFlightControlData(PointF targetPoint) {
-        //reset the flight control data according to the detection result
-        float rollAngleCo = 0.05f;
-        float pitchAngleCo = 0.0000001f;
-        float verticalThrottleCo = 0.1f;
 
-        float altitude = ((Aircraft)RDApplication.getProductInstance()).getFlightController()
+    float errorXI = 0;
+    float errorYI = 0;
+    float altitudeI = 0;
+    float errorXPre = 0;
+    float errorYPre = 0;
+    float altitudePre = 0;
+    public void setFlightControlData(PointF targetPoint) {
+
+        float errorXCur = targetPoint.x - 0.5f;
+        float errorYCur = targetPoint.y - 0.5f;
+        errorXI += errorXCur;
+        errorYI += errorYCur;
+
+        //--------------------roll--------------------
+        //specific
+        float rollP = 0.1f;
+        float rollI = 0.1f;
+        float rollD = 0.1f;
+        //roll angle range in (-0.4, 0.4)
+        float rollAngle = rollP*errorXCur+rollI*errorXI+rollD*(errorXCur-errorXPre);
+
+        //--------------------vertical--------------------
+        //specific
+        float verticalThrottleP = 0.1f;
+        float verticalThrottleI = 0.1f;
+        float verticalThrottleD = 0.1f;
+        float altitudeCur = ((Aircraft)RDApplication.getProductInstance()).getFlightController()
+                .getState().getAircraftLocation().getAltitude();
+        altitudeI += altitudeCur;
+        //roll angle range in (-5, 5)
+        float verticalThrottle = verticalThrottleP*altitudeCur+verticalThrottleI*altitudeI+verticalThrottleD*(altitudeCur-altitudePre);
+
+        //--------------------pitch--------------------
+        //specific
+        float pitchP = 0.1f;
+        float pitchI = 0.1f;
+        float pitchD = 0.1f;
+        //pitch angle: (0.00001, 0.001)
+        float pitchAngle = pitchP*errorXCur+pitchI*errorXI+pitchD*(errorXCur-errorXPre);
+
+        flightControlData = new FlightControlData(pitchAngle, rollAngle, 0, verticalThrottle);
+
+        errorXPre = errorXCur;
+        errorYPre = errorYCur;
+        altitudePre = altitudeCur;
+    }
+
+    public void setFlightControlData2() {
+        //for test
+
+        //build the center point
+        float longitudeCur = (float) ((Aircraft)RDApplication.getProductInstance()).getFlightController()
+                .getState().getAircraftLocation().getLongitude();
+        float latitudeCur = (float) ((Aircraft)RDApplication.getProductInstance()).getFlightController()
+                .getState().getAircraftLocation().getLatitude();
+        float altitudeCur = ((Aircraft)RDApplication.getProductInstance()).getFlightController()
                 .getState().getAircraftLocation().getAltitude();
 
-        flightControlData = new FlightControlData(
-                altitude*pitchAngleCo,
-                (targetPoint.x - 0.5f)*rollAngleCo,
-                0,
-                (targetPoint.y = 0.5f)*verticalThrottleCo );
+        Point3D flightPoint = new Point3D(longitudeCur, latitudeCur, altitudeCur);
+
+        Log.d(TAG, "flight point" +flightPoint);
+        Log.d(TAG, "target point" +target);
+
+        float errorXCur = flightPoint.x - target.x;
+        float errorYCur = flightPoint.y - target.y;
+        errorXI += errorXCur;
+        errorYI += errorYCur;
+
+        //--------------------roll--------------------
+        //specific
+        float rollP = 0.1f;
+        float rollI = 0.1f;
+        float rollD = 0.1f;
+        //roll angle range in (-0.4, 0.4)
+        float rollAngle = rollP*errorXCur+rollI*errorXI+rollD*(errorXCur-errorXPre);
+
+        //--------------------vertical--------------------
+        //specific
+        float verticalThrottleP = 0.1f;
+        float verticalThrottleI = 0.1f;
+        float verticalThrottleD = 0.1f;
+
+        altitudeI += altitudeCur;
+        //roll angle range in (-5, 5)
+        float verticalThrottle = verticalThrottleP*altitudeCur+verticalThrottleI*altitudeI+verticalThrottleD*(altitudeCur-altitudePre);
+
+        //--------------------pitch--------------------
+        //specific
+        float pitchP = 0.1f;
+        float pitchI = 0.1f;
+        float pitchD = 0.1f;
+        //pitch angle: (0.00001, 0.001)
+        float pitchAngle = pitchP*errorXCur+pitchI*errorXI+pitchD*(errorXCur-errorXPre);
+
+        flightControlData = new FlightControlData(pitchAngle, rollAngle, 0, verticalThrottle);
+
+        errorXPre = errorXCur;
+        errorYPre = errorYCur;
+        altitudePre = altitudeCur;
     }
 
     private class FlightControlDataTask extends TimerTask {
         //send flight control data
         @Override
         public void run() {
-            ((Aircraft)RDApplication.getProductInstance()).getFlightController().
+            if(testMode) {
+                setFlightControlData2();
+            }
+            ((Aircraft) RDApplication.getProductInstance()).getFlightController().
                     sendVirtualStickFlightControlData(flightControlData, new CommonCallbacks.CompletionCallback() {
                         @Override
                         public void onResult(DJIError djiError) {
 
                         }
                     });
-        }
-    }
-
-    //-------------------------Gimbal Control-------------------------
-    private static class GimbalRotateTask extends TimerTask {
-        float pitch = 45;
-        PointF preTargetPoint = null;
-        PointF curTargetPoint = null;
-        float ka = 5f;
-        float kb = 8f;
-        RotationMode rotationMode;
-
-        GimbalRotateTask(PointF inTargetPoint) {
-            super();
-            preTargetPoint = curTargetPoint;
-            curTargetPoint = inTargetPoint;
-        }
-
-        GimbalRotateTask(RotationMode rotationMode) {
-            //first rotate before the precision landing start
-            this.rotationMode = rotationMode;
-        }
-
-        public void setTargetPoint(PointF inTargetPoint) {
-            preTargetPoint = curTargetPoint;
-            curTargetPoint = inTargetPoint;
-        }
-
-        private float setPitch() {
-            if(preTargetPoint != null) {
-                if( (Math.abs(preTargetPoint.y - 0.5f) < Math.abs(curTargetPoint.y) - 0.5f) ) {
-                    pitch = ka * (curTargetPoint.y - 0.5f) + kb * (curTargetPoint.y - preTargetPoint.y);
-                }
-            }
-            return pitch;
-        }
-
-        @Override
-        public void run() {
-            if(rotationMode == RotationMode.ABSOLUTE_ANGLE) {
-                RDApplication.getProductInstance().getGimbal().
-                        rotate(new Rotation.Builder().pitch(pitch)
-                                .mode(RotationMode.ABSOLUTE_ANGLE)
-                                .yaw(Rotation.NO_ROTATION)
-                                .roll(Rotation.NO_ROTATION)
-                                .time(0)
-                                .build(), new CommonCallbacks.CompletionCallback() {
-
-                            @Override
-                            public void onResult(DJIError error) {
-
-                            }
-                        });
-            } else {
-                RDApplication.getProductInstance().getGimbal().
-                        rotate(new Rotation.Builder().pitch(setPitch())
-                                .mode(RotationMode.RELATIVE_ANGLE)
-                                .yaw(Rotation.NO_ROTATION)
-                                .roll(Rotation.NO_ROTATION)
-                                .time(0)
-                                .build(), new CommonCallbacks.CompletionCallback() {
-
-                            @Override
-                            public void onResult(DJIError error) {
-
-                            }
-                        });
-            }
         }
     }
 }

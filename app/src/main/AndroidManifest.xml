@@ -53,9 +53,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".autolanding.FlightControlActivity"
-            android:exported="false" />
-        <activity
             android:name=".autolanding.TestingActivity"
             android:exported="false" />
         <activity
