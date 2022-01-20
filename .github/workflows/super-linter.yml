@@ -11,12 +11,14 @@ on:
     branches:
     - master
     - work
-    - add-feature
+    - AddGaode
+    - OpenCV-Landing
   pull_request:
     branches:
     - master
     - work
-    - add-feature
+    - AddGaode
+    - OpenCV-Landing
 jobs:
   run-lint:
     runs-on: ubuntu-latest
