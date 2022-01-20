@@ -2,6 +2,7 @@
 *.apk
 *.ap_
 app/.cxx/
+opencv454/.cxx/
 .DS_Store
 
 # Files for the ART/Dalvik VM

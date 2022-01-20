@@ -1,3 +1,0 @@
-F:/AndroidStudioWork/OpencvTest/opencv454/.cxx/Debug/1q5c3z3e/x86/CMakeFiles/opencv_jni_shared.dir
-F:/AndroidStudioWork/OpencvTest/opencv454/.cxx/Debug/1q5c3z3e/x86/CMakeFiles/edit_cache.dir
-F:/AndroidStudioWork/OpencvTest/opencv454/.cxx/Debug/1q5c3z3e/x86/CMakeFiles/rebuild_cache.dir
