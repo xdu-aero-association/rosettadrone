@@ -1,0 +1,19 @@
+{
+  "buildFiles": [
+    "D:\\Android\\Sdk\\ndk\\20.0.5594570\\build\\cmake\\android.toolchain.cmake",
+    "D:\\Android\\Sdk\\ndk\\20.0.5594570\\build\\cmake\\platforms.cmake",
+    "F:\\DJI\\lasttime\\rosettadrone\\opencv454\\libcxx_helper\\CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "D:\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"F:\\DJI\\lasttime\\rosettadrone\\opencv454\\.cxx\\cmake\\debug\\x86\" clean"
+  ],
+  "buildTargetsCommand": "D:\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe  -C \"F:\\DJI\\lasttime\\rosettadrone\\opencv454\\.cxx\\cmake\\debug\\x86\" {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "opencv_jni_shared-Debug-x86": {
+      "artifactName": "opencv_jni_shared",
+      "buildCommand": "D:\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"F:\\DJI\\lasttime\\rosettadrone\\opencv454\\.cxx\\cmake\\debug\\x86\" opencv_jni_shared",
+      "abi": "x86",
+      "output": "F:\\DJI\\lasttime\\rosettadrone\\opencv454\\.cxx\\cmake\\debug\\x86\\libopencv_jni_shared.a"
+    }
+  }
+}

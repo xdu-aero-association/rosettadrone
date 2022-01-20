@@ -1,5 +1,7 @@
 package sq.rogue.rosettadrone.autolanding;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import java.util.Timer;
@@ -11,8 +13,11 @@ import dji.common.util.CommonCallbacks;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
 import sq.rogue.rosettadrone.RDApplication;
+import sq.rogue.rosettadrone.settings.Tools;
 
 public class VisualLanding implements DetectionCallback{
+
+    private static final String TAG = "Visual landing";
 
     private FlightController flightController;
     private TargetDetect targetDetect;
@@ -38,7 +43,9 @@ public class VisualLanding implements DetectionCallback{
             flightController.startLanding(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-
+                    if(djiError == null) {
+                        Log.d(TAG, "Start landing failed, error: " + djiError.getDescription());
+                    }
                 }
             });
 
@@ -49,7 +56,9 @@ public class VisualLanding implements DetectionCallback{
                         flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
-
+                                if(djiError == null) {
+                                    Log.d(TAG, "Confirm landing failed, error: " + djiError.getDescription());
+                                }
                             }
                         });
                     }
@@ -90,7 +99,7 @@ public class VisualLanding implements DetectionCallback{
             try{
                 targetDetectionThread.interrupt();
             } catch (Exception e) {
-
+                Log.d(TAG, "Error occurs while trying to end the target detection.");
             }
 
             //stop gimbal task
@@ -104,8 +113,7 @@ public class VisualLanding implements DetectionCallback{
                 gimbalRotateTask = null;
             }
         }else {
-            //fly up
-            //!!??
+            Log.d(TAG, "Start visual landing failed, error: the target is not in vision.");
         }
 
         return targetInVision;

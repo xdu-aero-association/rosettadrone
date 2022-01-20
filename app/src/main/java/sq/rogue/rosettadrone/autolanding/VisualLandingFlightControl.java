@@ -22,6 +22,7 @@ import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.gimbal.Gimbal;
 import dji.sdk.products.Aircraft;
 import sq.rogue.rosettadrone.RDApplication;
+import sq.rogue.rosettadrone.settings.Tools;
 
 public class VisualLandingFlightControl implements Runnable{
 
@@ -140,7 +141,7 @@ public class VisualLandingFlightControl implements Runnable{
             try {
                 targetDetectionThread.interrupt();
             } catch (Exception e) {
-
+                Log.d(TAG, "Error occurs while trying to end the target detection.");
             }
         }
 

@@ -1,9 +1,26 @@
 package sq.rogue.rosettadrone.autolanding;
 
+import static org.opencv.imgproc.Imgproc.CHAIN_APPROX_NONE;
+import static org.opencv.imgproc.Imgproc.COLOR_RGB2GRAY;
+import static org.opencv.imgproc.Imgproc.FILLED;
+import static org.opencv.imgproc.Imgproc.MORPH_CLOSE;
+import static org.opencv.imgproc.Imgproc.MORPH_RECT;
+import static org.opencv.imgproc.Imgproc.RETR_LIST;
+import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
+import static org.opencv.imgproc.Imgproc.circle;
+import static org.opencv.imgproc.Imgproc.connectedComponentsWithStats;
+import static org.opencv.imgproc.Imgproc.contourArea;
+import static org.opencv.imgproc.Imgproc.cvtColor;
+import static org.opencv.imgproc.Imgproc.drawContours;
+import static org.opencv.imgproc.Imgproc.findContours;
+import static org.opencv.imgproc.Imgproc.getStructuringElement;
+import static org.opencv.imgproc.Imgproc.moments;
+import static org.opencv.imgproc.Imgproc.morphologyEx;
+import static org.opencv.imgproc.Imgproc.threshold;
+
+
 import android.graphics.PointF;
 import android.util.Log;
-
-import static org.opencv.imgproc.Imgproc.*;
 
 import org.greenrobot.eventbus.EventBus;
 import org.opencv.core.CvType;
@@ -13,6 +30,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Moments;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

@@ -220,7 +220,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                     try {
                         FCTestThread.interrupt();
                     } catch (Exception e) {
-
+                        Tools.showToast(this, "Error occurs while trying to end the flight control.");
                     }
                 }
                 break;

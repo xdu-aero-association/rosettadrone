@@ -1,0 +1,21 @@
+Executable : D:\Android\Sdk\cmake\3.10.2.4988404\bin\cmake.exe
+arguments : 
+-HF:\DJI\lasttime\rosettadrone\opencv454\libcxx_helper
+-DCMAKE_BUILD_TYPE=Debug
+-DCMAKE_TOOLCHAIN_FILE=D:\Android\Sdk\ndk\20.0.5594570\build\cmake\android.toolchain.cmake
+-DANDROID_ABI=x86
+-DANDROID_NDK=D:\Android\Sdk\ndk\20.0.5594570
+-DANDROID_PLATFORM=android-21
+-DCMAKE_ANDROID_ARCH_ABI=x86
+-DCMAKE_ANDROID_NDK=D:\Android\Sdk\ndk\20.0.5594570
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=F:\DJI\lasttime\rosettadrone\opencv454\build\intermediates\cmake\debug\obj\x86
+-DCMAKE_MAKE_PROGRAM=D:\Android\Sdk\cmake\3.10.2.4988404\bin\ninja.exe
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_SYSTEM_VERSION=21
+-DANDROID_STL=c++_shared
+-BF:\DJI\lasttime\rosettadrone\opencv454\.cxx\cmake\debug\x86
+-GNinja
+jvmArgs : 
+
+Build command args:

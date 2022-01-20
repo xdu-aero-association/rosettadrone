@@ -1,0 +1,3 @@
+F:/DJI/lasttime/rosettadrone/opencv454/.cxx/cmake/debug/arm64-v8a/CMakeFiles/opencv_jni_shared.dir
+F:/DJI/lasttime/rosettadrone/opencv454/.cxx/cmake/debug/arm64-v8a/CMakeFiles/edit_cache.dir
+F:/DJI/lasttime/rosettadrone/opencv454/.cxx/cmake/debug/arm64-v8a/CMakeFiles/rebuild_cache.dir
