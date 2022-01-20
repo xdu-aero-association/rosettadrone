@@ -45,6 +45,7 @@ add_library( # Specifies the name of the library.
         # Provides a relative path to your source file(s).
         src/main/cpp/dji_video_jni.c)
 
+
 find_library(log-lib log)
 
 target_link_libraries(djivideojni ffmpegjni ${log-lib})

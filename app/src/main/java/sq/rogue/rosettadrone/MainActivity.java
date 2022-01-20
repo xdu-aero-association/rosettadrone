@@ -96,8 +96,10 @@ import dji.sdk.codec.DJICodecManager;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
+import sq.rogue.rosettadrone.autolanding.TestingActivity;
 import sq.rogue.rosettadrone.logs.LogFragment;
 import sq.rogue.rosettadrone.settings.SettingsActivity;
+import sq.rogue.rosettadrone.settings.Tools;
 import sq.rogue.rosettadrone.settings.Waypoint1Activity;
 import sq.rogue.rosettadrone.settings.Waypoint2Activity;
 import sq.rogue.rosettadrone.video.NativeHelper;
@@ -105,6 +107,8 @@ import sq.rogue.rosettadrone.video.VideoService;
 
 import static com.google.android.material.snackbar.Snackbar.LENGTH_LONG;
 import static sq.rogue.rosettadrone.util.safeSleep;
+
+import org.opencv.core.Mat;
 
 //public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -1146,8 +1150,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.action_gui:
                 onClickGUI();
                 break;
-            default:
-                return false;
+            case R.id.action_testing:
+                Tools.showToast(this, "BREAK A LEG :D");
+                Intent intent = new Intent(this, TestingActivity.class);
+                startActivity(intent);
+                break;
+
+            default: break;
         }
         return true;
     }

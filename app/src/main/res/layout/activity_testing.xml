@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:splitMotionEvents="true"
+    tools:context=".autolanding.TestingActivity">
+
+    <LinearLayout
+        android:id="@+id/testingLayout3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/testingLayout1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/targetAndGimbalTestBtn"
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:text="target&amp;gimbal" />
+
+            <Button
+                android:id="@+id/targetTestBtn"
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/targetAndGimbalTestBtn"
+                android:text="target test" />
+
+            <Button
+                android:id="@+id/flightTestBtn"
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/targetTestBtn"
+                android:text="flight test" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/testingLayout2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/targetAndFlightTestBtn"
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:text="target&amp;flight" />
+
+            <Button
+                android:id="@+id/fullStartTestBtn"
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/targetAndFlightTestBtn"
+                android:text="a full start" />
+
+            <Button
+                android:id="@+id/exitTestBtn"
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/fullStartTestBtn"
+                android:text="exit!" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/testingLayout4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/multiTest1Btn"
+                android:layout_width="40dp"
+                android:layout_height="35dp"
+                android:text="1" />
+
+            <Button
+                android:layout_width="40dp"
+                android:layout_height="35dp"
+                android:text="2"
+                android:layout_below="@+id/multiTest1Btn"
+                android:id="@+id/multiTest2Btn"/>
+
+            <LinearLayout
+                android:layout_width="220dp"
+                android:layout_height="110dp"
+                android:id="@+id/testingLayout5"
+                android:layout_toRightOf="@id/multiTest1Btn"
+                android:orientation="vertical">
+
+                <EditText
+                    android:layout_width="220dp"
+                    android:layout_height="35dp"
+                    android:id="@+id/longitudeET"
+                    android:hint="longitude"
+                    android:inputType="numberDecimal|numberSigned"/>
+
+                <EditText
+                    android:layout_width="220dp"
+                    android:layout_height="35dp"
+                    android:id="@+id/latitudeET"
+                    android:hint="latitude"
+                    android:inputType="numberDecimal|numberSigned"/>
+
+                <EditText
+                    android:layout_width="220dp"
+                    android:layout_height="35dp"
+                    android:id="@+id/altitudeET"
+                    android:hint="altitude"
+                    android:inputType="numberDecimal|numberSigned"/>
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/matshowV"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/testingLayout5"/>
+
+        </RelativeLayout>
+
+
+
+    </LinearLayout>
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/testingLayout3">
+
+        <TextureView
+            android:id="@+id/videoPreviewerSurface"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+    </RelativeLayout>
+
+</RelativeLayout>
