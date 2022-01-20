@@ -19,6 +19,12 @@ and supports Android 5.1 and newer, with DJI SDK 4.15.2 and Androidx lib.
 
 ## The project works with QGroundcontrol, goto and joystic is implemented
 
+### Work Progress
+
+- [ ] Change map from GoogleMap to GaodeMap.
+- [ ] Add opencv feature detection.
+- [ ] Add custom feature for precision landing.
+
 ### **Please create issues and create PR on this fork.**
 
 ![Image of Opening screen](images/IMG_4176.png)
