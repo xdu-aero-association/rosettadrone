@@ -1,3 +1,0 @@
-ninja: Entering directory `F:\DJI\lasttime\rosettadrone\opencv454\.cxx\cmake\debug\arm64-v8a'
-[1/2] Building CXX object CMakeFiles/opencv_jni_shared.dir/dummy.cpp.o
-[2/2] Linking CXX static library libopencv_jni_shared.a

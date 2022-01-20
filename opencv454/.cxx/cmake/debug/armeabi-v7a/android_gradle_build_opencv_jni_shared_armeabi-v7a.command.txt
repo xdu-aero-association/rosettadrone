@@ -1,7 +1,0 @@
-Executable : D:\Android\Sdk\cmake\3.10.2.4988404\bin\ninja.exe
-arguments : 
--C
-F:\DJI\lasttime\rosettadrone\opencv454\.cxx\cmake\debug\armeabi-v7a
-opencv_jni_shared
-jvmArgs : 
-
