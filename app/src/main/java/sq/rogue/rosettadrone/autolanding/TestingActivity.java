@@ -16,6 +16,10 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+
+import java.util.Timer;
+import java.util.concurrent.TimeUnit;
+
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
@@ -180,7 +184,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         switch (v.getId()) {
             case R.id.targetAndGimbalTestBtn:{
                 //test for the 'check' before visual landing
-
+                Tools.showToast(this, "Abandoned.");
                 break;
             }
             case R.id.targetTestBtn:{
@@ -189,15 +193,18 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
             }
             case R.id.flightTestBtn:{
                 float a=0, b=0, c=0;
-                if(longitudeET.getText().toString() != null) {
-                    a = Float.parseFloat(longitudeET.getText().toString());
-                }
                 if(latitudeET.getText().toString() != null){
-                    b = Float.parseFloat(latitudeET.getText().toString());
+                    a = Float.parseFloat(latitudeET.getText().toString());
                 }
+
+                if(longitudeET.getText().toString() != null) {
+                    b = Float.parseFloat(longitudeET.getText().toString());
+                }
+
                 if(altitudeET.getText().toString() != null) {
                     c = Float.parseFloat(altitudeET.getText().toString());
                 }
+
                 Point3D target = new Point3D(a, b, c);
                 Log.d(TAG, "Point3D:" + target);
                 VisualLandingFlightControl visualLandingFlightControl =
@@ -207,8 +214,9 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.targetAndFlightTestBtn:{
-                FCTestThread = new Thread(new VisualLandingFlightControl());
+                FCTestThread = new Thread(new VisualLandingFlightControl(codecManager));
                 FCTestThread.start();
+                break;
             }
             case R.id.fullStartTestBtn:{
                 VisualLanding visualLanding = new VisualLanding();
@@ -231,6 +239,10 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
             }
             case R.id.multiTest2Btn:{
                 Tools.showToast(this, "BREAK 2 LEGS!");
+                //test for the flight control mode POSITION
+                VisualLandingFlightControl visualLandingFlightControl =
+                        new VisualLandingFlightControl();
+                visualLandingFlightControl.sendFlightUpCommand();
                 break;
             }
             default: break;
