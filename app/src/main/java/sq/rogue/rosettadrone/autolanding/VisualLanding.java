@@ -35,7 +35,6 @@ public class VisualLanding implements DetectionCallback{
     public void startVisualLanding() {
 
         startGimbalTask(GimbalTaskMode.ADJUST);
-        //!!?? gimbal rotate mode SPEED, end way
 
         if(checkPrecisionLanding()){
             Thread visualLandingFlightControlThread = new Thread(new VisualLandingFlightControl());
@@ -78,16 +77,4 @@ public class VisualLanding implements DetectionCallback{
         timerGimbalRotateTask = new Timer();
         timerGimbalRotateTask.schedule(gimbalRotateTask, 0, 100);
     }
-
-//    private void endGimbalTask() {
-//        if(timerGimbalRotateTask != null) {
-//            timerGimbalRotateTask.cancel();
-//            timerGimbalRotateTask.purge();
-//            timerGimbalRotateTask = null;
-//        }
-//        if(gimbalRotateTask != null) {
-//            gimbalRotateTask.cancel();
-//            gimbalRotateTask = null;
-//        }
-//    }
 }

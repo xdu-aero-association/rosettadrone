@@ -45,9 +45,6 @@ public class TargetDetect implements Runnable {
     private boolean isTargetPointAtCenter = false;
     private Activity parent;
 
-    private int FRAME_SPACING = 5;
-    private int FRAME_RESULT_VALID = 5;
-    private int FRAME_IN_ONCE = 50;
     private float POINT_ERROR = 0.05f;
 
     private Mat frame = null;
@@ -55,7 +52,6 @@ public class TargetDetect implements Runnable {
     private Point currentCenter;
     public Point targetPoint = null;
 
-    private VideoFeeder.VideoFeed videoFeed;
     public DJICodecManager codecManager;
     private int videoWidth = -1;
     private int videoHeight;
@@ -68,20 +64,11 @@ public class TargetDetect implements Runnable {
 
     @Override
     public void run() {
-//        videoFeed = VideoFeeder.getInstance().provideTranscodedVideoFeed();
-//        videoFeed.addVideoDataListener(new VideoFeeder.VideoDataListener() {
-//            @Override
-//            public void onReceive(byte[] videoBuffer, int size) {
-//                Log.d(TAG, "Video size:" + size);
-//            }
-//        });
-
         if(!isTargetPointAtCenter) {
             EventBus.getDefault().post(new TargetPointResultEvent(getFlyPoint(), isTargetInVision()));
         } else {
             EventBus.getDefault().post(new TargetAtCenterEvent());
         }
-
     }
 
     //-------------------------Target Detection-------------------------
@@ -215,10 +202,6 @@ public class TargetDetect implements Runnable {
         }
         return false;
     }
-
-//    public void isTargetInVision(DetectionCallback detectionCallback) {
-//        detectionCallback.detectionCallback(true);
-//    }
 
     //-------------------------Get Video Source-------------------------
     public void getVideoData() {
