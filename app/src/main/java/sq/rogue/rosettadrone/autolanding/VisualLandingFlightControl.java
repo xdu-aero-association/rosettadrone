@@ -36,7 +36,6 @@ public class VisualLandingFlightControl implements Runnable{
 
     private FlightController flightController;
     private PointF targetPoint = null;
-    private Gimbal gimbal;
 
     private FlightControlData flightControlData;
     private Timer timerFlightDataTask;
@@ -50,10 +49,6 @@ public class VisualLandingFlightControl implements Runnable{
         this.testMode = testMode;
         this.target = target;
         Log.d(TAG, "Target point: " + target.x + target.y + target.z);
-    }
-
-    VisualLandingFlightControl() {
-
     }
 
     VisualLandingFlightControl(DJICodecManager djiCodecManager) {
@@ -117,14 +112,12 @@ public class VisualLandingFlightControl implements Runnable{
                 flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
             }
 
-            gimbal = RDApplication.getProductInstance().getGimbal();
-
         } else {
             Log.d(TAG, "FlightController is null");
         }
     }
 
-    public void endSecondFlightControl() {
+    public void endVisualLandingFlightControl() {
         //gimbal rotation task cancel
         if(gimbalRotateTask != null) {
             gimbalRotateTask.cancel();
@@ -168,18 +161,30 @@ public class VisualLandingFlightControl implements Runnable{
         });
     }
 
+    public void endCheckFlight() {
+        if(flightControlDataTask != null) {
+            flightControlDataTask.cancel();
+        }
+        if(timerFlightDataTask != null) {
+            timerFlightDataTask.cancel();
+            timerFlightDataTask.purge();
+        }
+        timerFlightDataTask = null;
+        flightControlDataTask = null;
+    }
+
     public void sendFlightUpCommand() {
         initFlightControl();
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.GROUND);
         flightController.setVerticalControlMode(VerticalControlMode.POSITION);
-        flightControlData = new FlightControlData(0, 0, 0, 6);
+        flightControlData = new FlightControlData(0, 0, 0, 8);
         timerFlightDataTask = new Timer();
         timerFlightDataTask.schedule(new FlightControlDataTask(), 0, 200);
     }
 
     @Subscribe(threadMode = ThreadMode.ASYNC)
     public void end(TargetAtCenterEvent targetAtCenterEvent) {
-        endSecondFlightControl();
+        endVisualLandingFlightControl();
         //land
         ((Aircraft)RDApplication.getProductInstance()).getFlightController().startLanding(new CommonCallbacks.CompletionCallback() {
             @Override
@@ -223,9 +228,12 @@ public class VisualLandingFlightControl implements Runnable{
     public void flightControl(TargetPointResultEvent targetPointResultEvent) {
         //receive the target detection result
         targetPoint = targetPointResultEvent.targetPoint;
-        setFlightControlData(targetPoint);
+        if(testMode){
+            setFlightControlData3(targetPoint);
+        }else {
+            setFlightControlData(targetPoint);
+        }
     }
-
 
     float errorXI = 0;
     float errorYI = 0;
@@ -331,19 +339,80 @@ public class VisualLandingFlightControl implements Runnable{
         altitudePre = altitudeCur;
     }
 
+    float pitchP = -0.0001f;
+    float pitchI = 0f;
+    float pitchD = -0.01f;
+
+    float rollP = 0.1f;
+    float rollI = 0.001f;
+    float rollD = 0.1f;
+
+    float verticalThrottleP = -0.1f;
+    float verticalThrottleI = -0.0001f;
+    float verticalThrottleD = 0.1f;
+
+    @Subscribe(threadMode = ThreadMode.ASYNC)
+    public void setPIDParam(PIDParamChangeEvent pidParamChangeEvent) {
+        if(pidParamChangeEvent.mode == 1) {
+            pitchP = pidParamChangeEvent.a;
+            pitchI = pidParamChangeEvent.b;
+            pitchD = pidParamChangeEvent.c;
+        }else if(pidParamChangeEvent.mode == 2) {
+            rollP = pidParamChangeEvent.a;
+            rollI = pidParamChangeEvent.b;
+            rollD = pidParamChangeEvent.c;
+        }else if(pidParamChangeEvent.mode == 3) {
+            verticalThrottleP = pidParamChangeEvent.a;
+            verticalThrottleI = pidParamChangeEvent.b;
+            verticalThrottleD = pidParamChangeEvent.c;
+        }
+    }
+
+    public void setFlightControlData3(PointF targetPoint) {
+
+        float errorXCur = targetPoint.x - 0.5f;
+        float errorYCur = targetPoint.y - 0.5f;
+        errorXI += errorXCur;
+        errorYI += errorYCur;
+
+        //--------------------pitch--------------------
+        //specific
+
+        //pitch angle: (0.00001, 0.001)
+        float pitchAngle = pitchP*errorXCur+pitchI*errorXI+pitchD*(errorXCur-errorXPre);
+
+        //--------------------roll--------------------
+        //specific
+
+        //roll angle range in (-0.4, 0.4)
+        float rollAngle = rollP*errorXCur+rollI*errorXI+rollD*(errorXCur-errorXPre);
+
+        //--------------------vertical--------------------
+        //specific
+
+        float altitudeCur = ((Aircraft)RDApplication.getProductInstance()).getFlightController()
+                .getState().getAircraftLocation().getAltitude();
+        altitudeI += altitudeCur;
+        //roll angle range in (-5, 5)
+        float verticalThrottle = verticalThrottleP*altitudeCur+verticalThrottleI*altitudeI+verticalThrottleD*(altitudeCur-altitudePre);
+
+        flightControlData = new FlightControlData(pitchAngle, rollAngle, 0, verticalThrottle);
+
+        errorXPre = errorXCur;
+        errorYPre = errorYCur;
+        altitudePre = altitudeCur;
+    }
+
     private class FlightControlDataTask extends TimerTask {
         //send flight control data
         @Override
         public void run() {
-            if(testMode) {
-                setFlightControlData2();
-            }
             ((Aircraft) RDApplication.getProductInstance()).getFlightController().
                     sendVirtualStickFlightControlData(flightControlData, new CommonCallbacks.CompletionCallback() {
                         @Override
                         public void onResult(DJIError djiError) {
                             if(djiError != null) {
-                                endSecondFlightControl();
+                                endVisualLandingFlightControl();
                             }
                         }
                     });

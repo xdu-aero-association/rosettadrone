@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import org.greenrobot.eventbus.EventBus;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -52,9 +53,13 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private Button multi2TestBtn;
     private ImageView imageView;
     protected TextureView videoSurface = null;
-    private EditText longitudeET;
-    private EditText latitudeET;
-    private EditText altitudeET;
+//    private EditText longitudeET;
+//    private EditText latitudeET;
+//    private EditText altitudeET;
+    private EditText pidPET;
+    private EditText pidIET;
+    private EditText pidDET;
+
 
     protected VideoFeeder.VideoDataListener videoDataListener = null;
     protected VideoFeeder.VideoFeed videoFeed = null;
@@ -158,9 +163,12 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         exitTestBtn = findViewById(R.id.exitTestBtn);
         multi1TestBtn = findViewById(R.id.multiTest1Btn);
         multi2TestBtn = findViewById(R.id.multiTest2Btn);
-        longitudeET = findViewById(R.id.longitudeET);
-        latitudeET = findViewById(R.id.latitudeET);
-        altitudeET = findViewById(R.id.altitudeET);
+//        longitudeET = findViewById(R.id.longitudeET);
+//        latitudeET = findViewById(R.id.latitudeET);
+//        altitudeET = findViewById(R.id.altitudeET);
+        pidPET = findViewById(R.id.pidPET);
+        pidIET = findViewById(R.id.pidIET);
+        pidDET = findViewById(R.id.pidDET);
 
         targetAndGimbalTestBtn.setOnClickListener(this);
         flightTestBtn.setOnClickListener(this);
@@ -180,6 +188,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         imageView = findViewById(R.id.matshowV);
     }
 
+    float a=0, b=0, c=0;
     public void onClick(View v){
         switch (v.getId()) {
             case R.id.targetAndGimbalTestBtn:{
@@ -192,25 +201,25 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.flightTestBtn:{
-                float a=0, b=0, c=0;
-                if(latitudeET.getText().toString() != null){
-                    a = Float.parseFloat(latitudeET.getText().toString());
-                }
-
-                if(longitudeET.getText().toString() != null) {
-                    b = Float.parseFloat(longitudeET.getText().toString());
-                }
-
-                if(altitudeET.getText().toString() != null) {
-                    c = Float.parseFloat(altitudeET.getText().toString());
-                }
-
-                Point3D target = new Point3D(a, b, c);
-                Log.d(TAG, "Point3D:" + target);
-                VisualLandingFlightControl visualLandingFlightControl =
-                    new VisualLandingFlightControl(true, target);
-                FCTestThread = new Thread(visualLandingFlightControl);
-                FCTestThread.start();
+//                float a=0, b=0, c=0;
+//                if(latitudeET.getText().toString() != null){
+//                    a = Float.parseFloat(latitudeET.getText().toString());
+//                }
+//
+//                if(longitudeET.getText().toString() != null) {
+//                    b = Float.parseFloat(longitudeET.getText().toString());
+//                }
+//
+//                if(altitudeET.getText().toString() != null) {
+//                    c = Float.parseFloat(altitudeET.getText().toString());
+//                }
+//
+//                Point3D target = new Point3D(a, b, c);
+//                Log.d(TAG, "Point3D:" + target);
+//                VisualLandingFlightControl visualLandingFlightControl =
+//                    new VisualLandingFlightControl(true, target);
+//                FCTestThread = new Thread(visualLandingFlightControl);
+//                FCTestThread.start();
                 break;
             }
             case R.id.targetAndFlightTestBtn:{
@@ -219,7 +228,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.fullStartTestBtn:{
-                VisualLanding visualLanding = new VisualLanding();
+                VisualLanding visualLanding = new VisualLanding(codecManager);
                 visualLanding.startVisualLanding();
                 break;
             }
@@ -234,15 +243,21 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.multiTest1Btn:{
-                Tools.showToast(this, "BREAK A LEG!");
+                //pitch pid param adjust
+                getDataFromET();
+                EventBus.getDefault().post(new PIDParamChangeEvent(a, b, c, 1));
                 break;
             }
             case R.id.multiTest2Btn:{
-                Tools.showToast(this, "BREAK 2 LEGS!");
-                //test for the flight control mode POSITION
-                VisualLandingFlightControl visualLandingFlightControl =
-                        new VisualLandingFlightControl();
-                visualLandingFlightControl.sendFlightUpCommand();
+                //roll pid param adjust
+                getDataFromET();
+                EventBus.getDefault().post(new PIDParamChangeEvent(a, b, c, 2));
+                break;
+            }
+            case R.id.multiTest3Btn:{
+                //vertical throttle param adjust
+                getDataFromET();
+                EventBus.getDefault().post(new PIDParamChangeEvent(a, b, c, 3));
                 break;
             }
             default: break;
@@ -292,5 +307,18 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         imageView.setVisibility(View.VISIBLE);
     }
 
+    private void getDataFromET() {
+        if(pidPET.getText().toString() != null){
+            a = Float.parseFloat(pidPET.getText().toString());
+        }
+
+        if(pidIET.getText().toString() != null) {
+            b = Float.parseFloat(pidIET.getText().toString());
+        }
+
+        if(pidDET.getText().toString() != null) {
+            c = Float.parseFloat(pidDET.getText().toString());
+        }
+    }
 }
 

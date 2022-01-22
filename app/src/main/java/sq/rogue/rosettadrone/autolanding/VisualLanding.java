@@ -22,14 +22,17 @@ public class VisualLanding implements DetectionCallback{
 
     private static final String TAG = "Visual landing";
 
+    protected DJICodecManager djiCodecManager;
     private TargetDetect targetDetect;
-    private Thread targetDetectionThread;
+    private VisualLandingFlightControl visualLandingFlightControl;
     boolean targetInVision = false;
     GimbalRotateTask gimbalRotateTask;
     Timer timerGimbalRotateTask;
 
-    public VisualLanding() {
-//        targetDetect = new TargetDetect();
+    public VisualLanding(DJICodecManager djiCodecManager) {
+        this.djiCodecManager = djiCodecManager;
+        targetDetect = new TargetDetect(djiCodecManager);
+        visualLandingFlightControl = new VisualLandingFlightControl(djiCodecManager);
     }
 
     public void startVisualLanding() {
@@ -37,11 +40,13 @@ public class VisualLanding implements DetectionCallback{
         startGimbalTask(GimbalTaskMode.ADJUST);
 
         if(checkPrecisionLanding()){
-            Thread visualLandingFlightControlThread = new Thread(new VisualLandingFlightControl());
+            Thread visualLandingFlightControlThread = new Thread(visualLandingFlightControl);
             visualLandingFlightControlThread.start();
         }else {
             Log.d(TAG, "Start visual landing failed, because the target is not in vision.");
         }
+
+        endGimbalTask();
     }
 
     private boolean checkPrecisionLanding() {
@@ -49,14 +54,17 @@ public class VisualLanding implements DetectionCallback{
         if(targetDetect.isTargetInVision()) {
             return true;
         }else {
-            VisualLandingFlightControl visualLandingFlightControl =
-                    new VisualLandingFlightControl();
-            visualLandingFlightControl.sendFlightUpCommand();
+            if(((Aircraft)RDApplication.getProductInstance()).getFlightController()
+                    .getState().getAircraftLocation().getAltitude() < 8) {
+                visualLandingFlightControl.sendFlightUpCommand();
+            }
 
             if(targetDetect.isTargetInVision()) {
+                visualLandingFlightControl.endCheckFlight();
                 return true;
             }
         }
+        visualLandingFlightControl.endCheckFlight();
         return false;
     }
 
@@ -66,15 +74,20 @@ public class VisualLanding implements DetectionCallback{
     }
 
     private void startGimbalTask(GimbalTaskMode gimbalTaskMode) {
-        if(timerGimbalRotateTask != null) {
-            try{
-                TimeUnit.SECONDS.sleep(30);
-            }catch (Exception e) {
-                Log.d(TAG, "Gimbal rotation task running.");
-            }
-        }
         gimbalRotateTask = new GimbalRotateTask(gimbalTaskMode);
         timerGimbalRotateTask = new Timer();
         timerGimbalRotateTask.schedule(gimbalRotateTask, 0, 100);
+    }
+
+    private void endGimbalTask() {
+        if(gimbalRotateTask != null) {
+            gimbalRotateTask.cancel();
+        }
+        if(timerGimbalRotateTask != null) {
+            timerGimbalRotateTask.cancel();
+            timerGimbalRotateTask.purge();
+        }
+        timerGimbalRotateTask = null;
+        gimbalRotateTask = null;
     }
 }

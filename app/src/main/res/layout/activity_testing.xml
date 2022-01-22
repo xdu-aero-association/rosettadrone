@@ -36,9 +36,9 @@
             <Button
                 android:id="@+id/flightTestBtn"
                 android:layout_width="90dp"
-                android:layout_height="wrap_content"
+                android:layout_height="55dp"
                 android:layout_toRightOf="@+id/targetTestBtn"
-                android:text="flight test" />
+                android:text="" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -62,7 +62,7 @@
             <Button
                 android:id="@+id/exitTestBtn"
                 android:layout_width="90dp"
-                android:layout_height="wrap_content"
+                android:layout_height="55dp"
                 android:layout_toRightOf="@+id/fullStartTestBtn"
                 android:text="exit!" />
         </RelativeLayout>
@@ -76,7 +76,7 @@
                 android:id="@+id/multiTest1Btn"
                 android:layout_width="40dp"
                 android:layout_height="35dp"
-                android:text="1" />
+                android:text="p" />
 
             <Button
                 android:id="@+id/multiTest2Btn"
@@ -84,7 +84,15 @@
                 android:layout_height="35dp"
                 android:layout_below="@+id/multiTest1Btn"
                 android:layout_marginTop="0dp"
-                android:text="FC" />
+                android:text="r" />
+
+            <Button
+                android:id="@+id/multiTest3Btn"
+                android:layout_width="40dp"
+                android:layout_height="35dp"
+                android:layout_below="@+id/multiTest2Btn"
+                android:layout_marginTop="0dp"
+                android:text="v" />
 
             <LinearLayout
                 android:layout_width="220dp"
@@ -93,25 +101,47 @@
                 android:layout_toRightOf="@id/multiTest1Btn"
                 android:orientation="vertical">
 
+<!--                <EditText-->
+<!--                    android:layout_width="220dp"-->
+<!--                    android:layout_height="35dp"-->
+<!--                    android:id="@+id/latitudeET"-->
+<!--                    android:hint="latitude"-->
+<!--                    android:inputType="numberDecimal|numberSigned"/>-->
+
+<!--                <EditText-->
+<!--                    android:layout_width="220dp"-->
+<!--                    android:layout_height="35dp"-->
+<!--                    android:id="@+id/longitudeET"-->
+<!--                    android:hint="longitude"-->
+<!--                    android:inputType="numberDecimal|numberSigned"/>-->
+
+<!--                <EditText-->
+<!--                    android:layout_width="220dp"-->
+<!--                    android:layout_height="35dp"-->
+<!--                    android:id="@+id/altitudeET"-->
+<!--                    android:hint="altitude"-->
+<!--                    android:inputType="numberDecimal|numberSigned"/>-->
+
+                <!-- -->
                 <EditText
                     android:layout_width="220dp"
-                    android:layout_height="35dp"
-                    android:id="@+id/latitudeET"
-                    android:hint="latitude"
+                    android:layout_height="38dp"
+                    android:id="@+id/pidPET"
+                    android:hint="p"
                     android:inputType="numberDecimal|numberSigned"/>
 
                 <EditText
                     android:layout_width="220dp"
-                    android:layout_height="35dp"
-                    android:id="@+id/longitudeET"
-                    android:hint="longitude"
+                    android:layout_height="38dp"
+                    android:id="@+id/pidIET"
+                    android:hint="i"
                     android:inputType="numberDecimal|numberSigned"/>
 
                 <EditText
                     android:layout_width="220dp"
-                    android:layout_height="35dp"
-                    android:id="@+id/altitudeET"
-                    android:hint="altitude"
+                    android:layout_height="38dp"
+                    android:id="@+id/pidDET"
+                    android:hint="d"
                     android:inputType="numberDecimal|numberSigned"/>
 
             </LinearLayout>

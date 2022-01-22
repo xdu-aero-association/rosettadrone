@@ -165,7 +165,6 @@ public class TargetDetect implements Runnable {
         return frame;
     }
 
-//!!??merge?
     private int getBiggestContoursNumber(List<MatOfPoint> contours) {
         int max = 0;
         if(contours != null) {
