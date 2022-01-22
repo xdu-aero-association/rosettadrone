@@ -19,6 +19,7 @@ import static org.opencv.imgproc.Imgproc.morphologyEx;
 import static org.opencv.imgproc.Imgproc.threshold;
 
 
+import android.app.Activity;
 import android.graphics.PointF;
 import android.util.Log;
 
@@ -42,10 +43,8 @@ public class TargetDetect implements Runnable {
     private static final String TAG = "TargetDetection";
 
     private boolean isTargetPointAtCenter = false;
+    private Activity parent;
 
-    private int FRAME_SPACING = 5;
-    private int FRAME_RESULT_VALID = 5;
-    private int FRAME_IN_ONCE = 50;
     private float POINT_ERROR = 0.05f;
 
     private Mat frame = null;
@@ -53,45 +52,30 @@ public class TargetDetect implements Runnable {
     private Point currentCenter;
     public Point targetPoint = null;
 
-    private VideoFeeder.VideoFeed videoFeed;
     public DJICodecManager codecManager;
     private int videoWidth = -1;
     private int videoHeight;
     private byte[] RGBAData = null;
 
-    //!!??
+    //!!?? extends from the parent Activity
     public TargetDetect(DJICodecManager codecManager) {
          this.codecManager = codecManager;
     }
 
-    public TargetDetect() {
-
-    }
-
     @Override
     public void run() {
-        videoFeed = VideoFeeder.getInstance().provideTranscodedVideoFeed();
-        videoFeed.addVideoDataListener(new VideoFeeder.VideoDataListener() {
-            @Override
-            public void onReceive(byte[] videoBuffer, int size) {
-                Log.d(TAG, "Video size:" + size);
-            }
-        });
-
-        getVideoData();
         if(!isTargetPointAtCenter) {
             EventBus.getDefault().post(new TargetPointResultEvent(getFlyPoint(), isTargetInVision()));
         } else {
-            EventBus.getDefault().post(new ThreadEvent());
+            EventBus.getDefault().post(new TargetAtCenterEvent());
         }
-
     }
 
     //-------------------------Target Detection-------------------------
     //in invoked order
 
     public PointF getFlyPoint(){
-        currentCenter = getTargetPoint(frame);
+        currentCenter = getTargetPoint();
         int frameW = frame.width();
         int frameH = frame.height();
 
@@ -108,8 +92,9 @@ public class TargetDetect implements Runnable {
         return new PointF( xF, yF);
     }
 
-    protected Point getTargetPoint(Mat frame){
+    protected Point getTargetPoint(){
 
+        getVideoData();
         Mat frameDealing = new Mat();
 
         //RGB 2 gray
@@ -182,13 +167,15 @@ public class TargetDetect implements Runnable {
 
 //!!??merge?
     private int getBiggestContoursNumber(List<MatOfPoint> contours) {
-        double max_area = contourArea(contours.get(0));
         int max = 0;
-        for(int i=0; i< contours.size(); i++){
-            double area = contourArea((contours.get(i)));
-            if(area > max_area){
-                max_area = area;
-                max = i;
+        if(contours != null) {
+            double max_area = contourArea(contours.get(0));
+            for (int i = 0; i < contours.size(); i++) {
+                double area = contourArea((contours.get(i)));
+                if (area > max_area) {
+                    max_area = area;
+                    max = i;
+                }
             }
         }
         return max;
@@ -207,32 +194,13 @@ public class TargetDetect implements Runnable {
         }
     }
 
-    private boolean isTargetInVision() {
-//!!??
-        int spacingFrame;
-        int validFrame = 0;
-        int countFrameInOnce = 0;
-
-        while(countFrameInOnce != FRAME_IN_ONCE) {
-            getVideoData();
-            spacingFrame = 0;
-            while(spacingFrame != FRAME_SPACING) {
-                if(getTargetPoint(frame) != null) {
-                    validFrame ++;
-                }
-                spacingFrame ++;
-                countFrameInOnce ++;
-            }
-        }
-
-        if(validFrame > FRAME_RESULT_VALID) {
+    public boolean isTargetInVision() {
+        targetPoint = null;
+        targetPoint = getTargetPoint();
+        if(targetPoint != null) {
             return true;
         }
         return false;
-    }
-
-    public void isTargetInVision(DetectionCallback detectionCallback) {
-        detectionCallback.detectionCallback(true);
     }
 
     //-------------------------Get Video Source-------------------------

@@ -2,9 +2,12 @@ package sq.rogue.rosettadrone.autolanding;
 
 import android.graphics.PointF;
 
+import androidx.annotation.NonNull;
+
 import java.util.TimerTask;
 
 import dji.common.error.DJIError;
+import dji.common.gimbal.GimbalState;
 import dji.common.gimbal.Rotation;
 import dji.common.gimbal.RotationMode;
 import dji.common.util.CommonCallbacks;
@@ -19,22 +22,9 @@ public class GimbalRotateTask extends TimerTask {
     GimbalTaskMode gimbalTaskMode;
     RotationMode rotationMode;
 
-    GimbalRotateTask(PointF inTargetPoint) {
-        super();
-        preTargetPoint = curTargetPoint;
-        curTargetPoint = inTargetPoint;
-    }
-
     GimbalRotateTask(GimbalTaskMode gimbalTaskMode) {
         //first rotate before the precision landing start
         this.gimbalTaskMode = gimbalTaskMode;
-    }
-
-
-
-    public void setTargetPoint(PointF inTargetPoint) {
-        preTargetPoint = curTargetPoint;
-        curTargetPoint = inTargetPoint;
     }
 
     private float setPitch() {
@@ -50,8 +40,10 @@ public class GimbalRotateTask extends TimerTask {
     public void run() {
         if(gimbalTaskMode == GimbalTaskMode.ADJUST) {
             rotationMode = RotationMode.ABSOLUTE_ANGLE;
+            pitch = -90;
         } else if(gimbalTaskMode == GimbalTaskMode.CHECK) {
             rotationMode = RotationMode.SPEED;
+            pitch = -40;
         } else if(gimbalTaskMode == GimbalTaskMode.POINT) {
             pitch = setPitch();
         }
@@ -71,4 +63,3 @@ public class GimbalRotateTask extends TimerTask {
                 });
     }
 }
-
