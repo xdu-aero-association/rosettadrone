@@ -52,6 +52,7 @@ import dji.common.model.LocationCoordinate2D;
 import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.base.BaseProduct;
+import dji.sdk.codec.DJICodecManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flightcontroller.RTK;
 import dji.sdk.mission.MissionControl;
@@ -65,6 +66,7 @@ import sq.rogue.rosettadrone.MainActivity;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 import sq.rogue.rosettadrone.autolanding.TestingActivity;
+import sq.rogue.rosettadrone.autolanding.VisualLanding;
 
 //import com.google.android.gms.maps.CameraUpdate;
 //import com.google.android.gms.maps.CameraUpdateFactory;
@@ -111,6 +113,9 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
     private RTK mRtk;
     private float droneHeading;
     private float droneHeight;
+
+    private boolean visualLandingOn = false;
+    private DJICodecManager djiCodecManager;
 
     private TextView logTv;
 
@@ -644,7 +649,11 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
                     mFinishedAction = WaypointV2MissionTypes.MissionFinishedAction.AUTO_LAND;
                 } else if (checkedId == R.id.finishToFirst) {
                     mFinishedAction = WaypointV2MissionTypes.MissionFinishedAction.GO_FIRST_WAYPOINT;
+                } else if (checkedId == R.id.finishVisualLanding) {
+                    mFinishedAction = WaypointV2MissionTypes.MissionFinishedAction.NO_ACTION;
+                    visualLandingOn = true;
                 }
+
 //                else if (checkedId == R.id.untilStop) {
 //                    mFinishedAction = WaypointV2MissionTypes.MissionFinishedAction.CONTINUE_UNTIL_STOP;
 //                }
@@ -776,6 +785,11 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
                 setResultToToast("Mission Start: " + (error == null ? "Successfully" : error.getDescription()));
             }
         });
+
+        if(visualLandingOn) {
+            VisualLanding visualLanding = new VisualLanding();
+            visualLanding.startVisualLanding();
+        }
 
     }
 

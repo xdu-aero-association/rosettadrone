@@ -136,6 +136,13 @@
             <!--                android:textSize="5pt"-->
             <!--                android:text="Until stop"/>-->
 
+            <RadioButton
+                android:id="@+id/finishVisualLanding"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="5pt"
+                android:text="VisualLand" />
+
         </RadioGroup>
     </LinearLayout>
 

@@ -59,6 +59,7 @@ import dji.sdk.useraccount.UserAccountManager;
 import sq.rogue.rosettadrone.DJISimulatorApplication;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
+import sq.rogue.rosettadrone.autolanding.VisualLanding;
 
 //import com.google.android.gms.maps.CameraUpdate;
 //import com.google.android.gms.maps.CameraUpdateFactory;
@@ -92,6 +93,8 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
     private WaypointMissionOperator instance;
     private WaypointMissionFinishedAction mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
     private WaypointMissionHeadingMode mHeadingMode = WaypointMissionHeadingMode.AUTO;
+
+    private boolean visualLandingOn = false;
 
     @Override
     protected void onResume() {
@@ -445,6 +448,9 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
                     mFinishedAction = WaypointMissionFinishedAction.AUTO_LAND;
                 } else if (checkedId == R.id.finishToFirst) {
                     mFinishedAction = WaypointMissionFinishedAction.GO_FIRST_WAYPOINT;
+                } else if (checkedId == R.id.finishVisualLanding) {
+                    mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
+                    visualLandingOn = true;
                 }
             }
         });
@@ -568,6 +574,11 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
                 setResultToToast("Mission Start: " + (error == null ? "Successfully" : error.getDescription()));
             }
         });
+
+        if (visualLandingOn) {
+            VisualLanding visualLanding = new VisualLanding();
+            visualLanding.startVisualLanding();
+        }
     }
 
     private void stopWaypointMission() {

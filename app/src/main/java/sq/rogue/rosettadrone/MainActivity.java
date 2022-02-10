@@ -1160,6 +1160,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.action_settings:
                 onClickSettings();
                 break;
+                //? 1 or 2
             case R.id.action_waypoint2:
                 onClickWaypoint1();
                 break;
