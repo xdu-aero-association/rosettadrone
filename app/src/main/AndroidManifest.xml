@@ -107,6 +107,10 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_key" />
+        <!-- 启用高德地图服务 -->
+        <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="@string/gaode_key" />
     </application>
 
 </manifest>

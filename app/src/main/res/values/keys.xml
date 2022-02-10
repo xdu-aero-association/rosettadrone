@@ -2,4 +2,5 @@
 <resources>
     <string name="dji_key">a0d0e7d679e722241af3738d</string>
     <string name="google_key">AIzaSyCfSs3-CNbarlGERWyvCuexITZCYRsKQbs</string>
+    <string name="gaode_key">9808aa00b8408faade58e9a7ad34c6cd</string>
 </resources>
