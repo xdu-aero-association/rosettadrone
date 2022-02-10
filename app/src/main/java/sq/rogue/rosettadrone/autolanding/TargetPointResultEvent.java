@@ -1,6 +1,7 @@
 package sq.rogue.rosettadrone.autolanding;
 
 import android.graphics.PointF;
+import android.util.Log;
 
 public class TargetPointResultEvent {
     protected boolean isTargetInVision;

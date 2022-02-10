@@ -1,31 +1,26 @@
 package sq.rogue.rosettadrone.autolanding;
 
 import android.util.Log;
-import android.util.TimeUtils;
-
-import androidx.annotation.NonNull;
 
 import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
-import dji.common.error.DJIError;
-import dji.common.flightcontroller.FlightControllerState;
-import dji.common.gimbal.GimbalState;
-import dji.common.util.CommonCallbacks;
 import dji.sdk.codec.DJICodecManager;
-import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
 import sq.rogue.rosettadrone.RDApplication;
-import sq.rogue.rosettadrone.settings.Tools;
 
-public class VisualLanding implements DetectionCallback{
+//pid param opposite
+//coordinate system relative
+//exit → time, is
+//straight?  coordinate
+//gimbal
+
+public class VisualLanding {
 
     private static final String TAG = "Visual landing";
 
     protected DJICodecManager djiCodecManager;
     private TargetDetect targetDetect;
-    private VisualLandingFlightControl visualLandingFlightControl;
-    boolean targetInVision = false;
+    protected VisualLandingFlightControl visualLandingFlightControl;
     GimbalRotateTask gimbalRotateTask;
     Timer timerGimbalRotateTask;
 
@@ -39,24 +34,25 @@ public class VisualLanding implements DetectionCallback{
 
         startGimbalTask(GimbalTaskMode.ADJUST);
 
-        if(checkPrecisionLanding()){
+        if(checkVisualLanding()){
             Thread visualLandingFlightControlThread = new Thread(visualLandingFlightControl);
             visualLandingFlightControlThread.start();
+            Log.d(TAG, "visualLandingFlightControl start");
         }else {
             Log.d(TAG, "Start visual landing failed, because the target is not in vision.");
         }
-
-        endGimbalTask();
     }
 
-    private boolean checkPrecisionLanding() {
+    private boolean checkVisualLanding() {
 
+        Log.d(TAG, "check visual landing");
         if(targetDetect.isTargetInVision()) {
             return true;
         }else {
             if(((Aircraft)RDApplication.getProductInstance()).getFlightController()
                     .getState().getAircraftLocation().getAltitude() < 8) {
                 visualLandingFlightControl.sendFlightUpCommand();
+                Log.d(TAG, "send Flight up command");
             }
 
             if(targetDetect.isTargetInVision()) {
@@ -66,11 +62,6 @@ public class VisualLanding implements DetectionCallback{
         }
         visualLandingFlightControl.endCheckFlight();
         return false;
-    }
-
-    @Override
-    public void detectionCallback(boolean targetDetected) {
-        targetInVision = targetDetected;
     }
 
     private void startGimbalTask(GimbalTaskMode gimbalTaskMode) {

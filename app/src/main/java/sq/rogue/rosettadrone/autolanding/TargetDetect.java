@@ -24,6 +24,8 @@ import android.graphics.PointF;
 import android.util.Log;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -43,7 +45,7 @@ public class TargetDetect implements Runnable {
     private static final String TAG = "TargetDetection";
 
     private boolean isTargetPointAtCenter = false;
-    private Activity parent;
+    public boolean exit = false;
 
     private float POINT_ERROR = 0.05f;
 
@@ -64,10 +66,13 @@ public class TargetDetect implements Runnable {
 
     @Override
     public void run() {
-        if(!isTargetPointAtCenter) {
-            EventBus.getDefault().post(new TargetPointResultEvent(getFlyPoint(), isTargetInVision()));
-        } else {
-            EventBus.getDefault().post(new TargetAtCenterEvent());
+        while (!isTargetPointAtCenter && !exit) {
+            EventBus.getDefault().postSticky(new TargetPointResultEvent(getFlyPoint(), isTargetInVision()));
+            Log.d(TAG, "sendTargetPointResultEvent");
+        }
+        if(!exit) {
+            EventBus.getDefault().postSticky(new TargetAtCenterEvent());
+            Log.d(TAG, "sendTargetAtCenterEvent.");
         }
     }
 
@@ -76,6 +81,9 @@ public class TargetDetect implements Runnable {
 
     public PointF getFlyPoint(){
         currentCenter = getTargetPoint();
+        if(currentCenter == null) {
+            return null;
+        }
         int frameW = frame.width();
         int frameH = frame.height();
 
@@ -86,15 +94,20 @@ public class TargetDetect implements Runnable {
         if( (Math.abs(frameW - currentCenter.x) / frameW) < POINT_ERROR
             && (Math.abs(frameH - currentCenter.y) / frameH) < POINT_ERROR) {
             isTargetPointAtCenter = true;
+            EventBus.getDefault().postSticky(new TargetAtCenterEvent());
         }
+
         float xF = ((float) x);
         float yF = ((float) y);
         return new PointF( xF, yF);
     }
 
-    protected Point getTargetPoint(){
+    private Point getTargetPoint(){
 
         getVideoData();
+        if(frame == null) {
+            return null;
+        }
         Mat frameDealing = new Mat();
 
         //RGB 2 gray
@@ -131,6 +144,9 @@ public class TargetDetect implements Runnable {
     public Mat getTestMat(){
 
         getVideoData();
+        if(frame == null) {
+            return null;
+        }
 
         Mat frameDealing = new Mat();
 
@@ -162,12 +178,30 @@ public class TargetDetect implements Runnable {
         drawContours(frame, contours, max, new Scalar(0, 0, 255) ,FILLED);
         circle(frame, targetPoint,4, new Scalar(0, 0, 255), FILLED);
 
+        int frameW = frame.width();
+        int frameH = frame.height();
+
+        double x = targetPoint.x/frameW;
+        double y = targetPoint.y/frameH;
+
+        //whether the point is in center
+        if( (Math.abs(frameW - targetPoint.x) / frameW) < POINT_ERROR
+                && (Math.abs(frameH - targetPoint.y) / frameH) < POINT_ERROR) {
+            isTargetPointAtCenter = true;
+            EventBus.getDefault().post(new TargetAtCenterEvent());
+        }
+
+        float xF = ((float) x);
+        float yF = ((float) y);
+        PointF point = new PointF( xF, yF);
+        Log.d(TAG, "Target point: " + point);
+
         return frame;
     }
 
     private int getBiggestContoursNumber(List<MatOfPoint> contours) {
         int max = 0;
-        if(contours != null) {
+        if(contours.size() > 0) {
             double max_area = contourArea(contours.get(0));
             for (int i = 0; i < contours.size(); i++) {
                 double area = contourArea((contours.get(i)));
@@ -181,14 +215,16 @@ public class TargetDetect implements Runnable {
     }
 
     private void getBiggestContours(List<MatOfPoint> contours) {
-        Iterator<MatOfPoint> each = contours.iterator();
-        MatOfPoint wrapper = contours.get(0);
-        double maxArea = contourArea(wrapper);
-        while(each.hasNext()){
-            wrapper = each.next();
-            double area = contourArea(wrapper);
-            if(area < maxArea){
-                each.remove();
+        if(contours.size() > 0) {
+            Iterator<MatOfPoint> each = contours.iterator();
+            MatOfPoint wrapper = contours.get(0);
+            double maxArea = contourArea(wrapper);
+            while (each.hasNext()) {
+                wrapper = each.next();
+                double area = contourArea(wrapper);
+                if (area < maxArea) {
+                    each.remove();
+                }
             }
         }
     }
@@ -207,10 +243,9 @@ public class TargetDetect implements Runnable {
         videoWidth = codecManager.getVideoWidth();
         videoHeight = codecManager.getVideoHeight();
         RGBAData = codecManager.getRgbaData(videoWidth, videoHeight);
-        frame = new Mat(videoHeight, videoWidth, CvType.CV_8UC4);
-        frame.put(0, 0, RGBAData);
-        if(frame == null) {
-            Log.d(TAG, "The Mat frame is null!");
+        if(RGBAData != null) {
+            frame = new Mat(videoHeight, videoWidth, CvType.CV_8UC4);
+            frame.put(0, 0, RGBAData);
         }
     }
 }

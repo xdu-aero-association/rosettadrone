@@ -2,9 +2,12 @@ package sq.rogue.rosettadrone.autolanding;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
@@ -39,7 +42,7 @@ import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 import sq.rogue.rosettadrone.settings.Tools;
 
-public class TestingActivity extends Activity implements TextureView.SurfaceTextureListener, View.OnClickListener {
+public class TestingActivity extends Activity implements TextureView.SurfaceTextureListener, SurfaceHolder.Callback, View.OnClickListener {
 
     private static final String TAG = "TestingActivity";
 
@@ -53,6 +56,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private Button multi2TestBtn;
     private ImageView imageView;
     protected TextureView videoSurface = null;
+    private SurfaceView drawingSurface = null;
 //    private EditText longitudeET;
 //    private EditText latitudeET;
 //    private EditText altitudeET;
@@ -67,6 +71,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
 
     private FlightController flightController;
     private Thread FCTestThread = null;
+    private DrawingLandingPointThread drawingLandingPointThread;
 
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -186,8 +191,15 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         videoSurface.setVisibility(View.VISIBLE);
 
         imageView = findViewById(R.id.matshowV);
+
+        drawingSurface = findViewById(R.id.drawingSurface);
+        if(drawingSurface != null){
+            drawingSurface.setZOrderOnTop(true);
+            drawingSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        }
     }
 
+    VisualLanding visualLanding;
     float a=0, b=0, c=0;
     public void onClick(View v){
         switch (v.getId()) {
@@ -223,23 +235,29 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.targetAndFlightTestBtn:{
-                FCTestThread = new Thread(new VisualLandingFlightControl(codecManager));
+                FCTestThread = new Thread(new VisualLandingFlightControl(true, codecManager));
                 FCTestThread.start();
                 break;
             }
             case R.id.fullStartTestBtn:{
-                VisualLanding visualLanding = new VisualLanding(codecManager);
+                visualLanding = new VisualLanding(codecManager);
                 visualLanding.startVisualLanding();
                 break;
             }
             case R.id.exitTestBtn:{
-                if(FCTestThread != null) {
-                    try {
-                        FCTestThread.interrupt();
-                    } catch (Exception e) {
-                        Tools.showToast(this, "Error occurs while trying to end the flight control.");
-                    }
-                }
+//                    ((Aircraft)RDApplication.getProductInstance()).getFlightController()
+//                            .setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
+//                                @Override
+//                                public void onResult(DJIError djiError) {
+//                                    if(djiError != null) {
+//                                        Tools.showToast(TestingActivity.this, "Exit error: "+djiError.getDescription());
+////                                    }
+////                                }
+////                            });
+
+                    visualLanding.visualLandingFlightControl.endVisualLandingFlightControl();
+
+                    EventBus.getDefault().post(new ExitEvent());
                 break;
             }
             case R.id.multiTest1Btn:{
@@ -319,6 +337,24 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         if(pidDET.getText().toString() != null) {
             c = Float.parseFloat(pidDET.getText().toString());
         }
+        Tools.showToast(this, "Change the PID params.");
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        drawingLandingPointThread = new DrawingLandingPointThread(drawingSurface);
+        drawingLandingPointThread.start();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        drawingLandingPointThread.drawingControl = false;
+        drawingLandingPointThread.interrupt();
     }
 }
 
