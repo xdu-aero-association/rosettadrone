@@ -30,6 +30,10 @@ public class VisualLanding {
         visualLandingFlightControl = new VisualLandingFlightControl(djiCodecManager);
     }
 
+    public VisualLanding() {
+
+    }
+
     public void startVisualLanding() {
 
         startGimbalTask(GimbalTaskMode.ADJUST);

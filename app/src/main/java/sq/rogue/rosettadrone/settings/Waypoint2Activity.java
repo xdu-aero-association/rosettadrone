@@ -63,6 +63,7 @@ import sq.rogue.rosettadrone.MainActivity;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 import sq.rogue.rosettadrone.autolanding.TestingActivity;
+import sq.rogue.rosettadrone.autolanding.VisualLanding;
 
 public class Waypoint2Activity extends FragmentActivity implements View.OnClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback {
 
@@ -104,6 +105,8 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
     private float droneHeight;
 
     private TextView logTv;
+
+    private boolean visualLandOn = false;
 
     @Override
     protected void onResume() {
@@ -635,6 +638,9 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
                     mFinishedAction = WaypointV2MissionTypes.MissionFinishedAction.AUTO_LAND;
                 } else if (checkedId == R.id.finishToFirst) {
                     mFinishedAction = WaypointV2MissionTypes.MissionFinishedAction.GO_FIRST_WAYPOINT;
+                } else if (checkedId == R.id.finishVisualLand) {
+                    mFinishedAction = WaypointV2MissionTypes.MissionFinishedAction.NO_ACTION;
+                    visualLandOn = true;
                 }
 //                else if (checkedId == R.id.untilStop) {
 //                    mFinishedAction = WaypointV2MissionTypes.MissionFinishedAction.CONTINUE_UNTIL_STOP;
@@ -768,6 +774,10 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
             }
         });
 
+        if (visualLandOn) {
+            VisualLanding visualLanding = new VisualLanding();
+            visualLanding.startVisualLanding();
+        }
     }
 
     private void stopWaypointMission() {
