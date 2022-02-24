@@ -193,10 +193,10 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         imageView = findViewById(R.id.matshowV);
 
         drawingSurface = findViewById(R.id.drawingSurface);
-        if(drawingSurface != null){
-            drawingSurface.setZOrderOnTop(true);
-            drawingSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
-        }
+        drawingSurface.getHolder().addCallback(TestingActivity.this);
+        drawingSurface.setZOrderOnTop(true);
+        drawingSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        drawingSurface.setVisibility(View.VISIBLE);
     }
 
     VisualLanding visualLanding;
@@ -213,25 +213,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.flightTestBtn:{
-//                float a=0, b=0, c=0;
-//                if(latitudeET.getText().toString() != null){
-//                    a = Float.parseFloat(latitudeET.getText().toString());
-//                }
-//
-//                if(longitudeET.getText().toString() != null) {
-//                    b = Float.parseFloat(longitudeET.getText().toString());
-//                }
-//
-//                if(altitudeET.getText().toString() != null) {
-//                    c = Float.parseFloat(altitudeET.getText().toString());
-//                }
-//
-//                Point3D target = new Point3D(a, b, c);
-//                Log.d(TAG, "Point3D:" + target);
-//                VisualLandingFlightControl visualLandingFlightControl =
-//                    new VisualLandingFlightControl(true, target);
-//                FCTestThread = new Thread(visualLandingFlightControl);
-//                FCTestThread.start();
+
                 break;
             }
             case R.id.targetAndFlightTestBtn:{
@@ -323,6 +305,9 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         }
         imageView.setImageBitmap(bitmap);
         imageView.setVisibility(View.VISIBLE);
+
+        Thread targetDetection = new Thread(targetDetect);
+        targetDetection.start();
     }
 
     private void getDataFromET() {
@@ -342,7 +327,8 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        drawingLandingPointThread = new DrawingLandingPointThread(drawingSurface);
+        Log.d(TAG, "SurfaceViewStart");
+        drawingLandingPointThread = new DrawingLandingPointThread(drawingSurface, videoSurface.getHeight(), videoSurface.getWidth());
         drawingLandingPointThread.start();
     }
 
