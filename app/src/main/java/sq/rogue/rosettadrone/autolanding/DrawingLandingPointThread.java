@@ -23,6 +23,7 @@ public class DrawingLandingPointThread extends Thread{
     private int height;
     private int width;
     public PointF targetPoint = null;
+    private float radius = 4f;
 
     public boolean drawingControl = true;
 
@@ -38,33 +39,40 @@ public class DrawingLandingPointThread extends Thread{
         paint.setStrokeWidth(100f);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(sticky = true, threadMode = ThreadMode.ASYNC)
     public void setTargetPoint(TargetPointResultEvent targetPointResultEvent) {
-        targetPoint = targetPointResultEvent.targetPoint;
+        if(targetPointResultEvent.targetPoint != null) {
+            targetPoint = targetPointResultEvent.targetPoint;
+            this.radius = targetPointResultEvent.radius;
+            Log.d(TAG, " thePointIs: " + targetPoint);
+        }
     }
 
     @Override
     public void run() {
 
-        Log.d(TAG, "DrawingPointStart");
-
         EventBus.getDefault().register(this);
+        Canvas canvas = new Canvas();
 
         while(drawingControl) {
+            long time1 = System.currentTimeMillis();
 
-            if (targetPoint != null) {
-                Canvas canvas = drawingHolder.lockCanvas();
-                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-                canvas.drawCircle(targetPoint.x*width, targetPoint.y*height, 50f, paint);
-                Log.d(TAG, "DrawThePoint"+" "+targetPoint.x+" "+targetPoint.y);
-                drawingHolder.unlockCanvasAndPost(canvas);
+            canvas = drawingHolder.lockCanvas();
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+            if(targetPoint != null) {
+                canvas.drawCircle(targetPoint.x * width, targetPoint.y * height, 50f, paint);
+                long time2 = System.currentTimeMillis();
+                long duration = time2 - time1;
+                Log.d(TAG, "DrawThePoint"+" "+targetPoint.x+" "+targetPoint.y
+                        + "\n" + " ProcessingDuration: " + duration);
             }
+            drawingHolder.unlockCanvasAndPost(canvas);
 
-            try{
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try{
+//                Thread.sleep(50);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 }

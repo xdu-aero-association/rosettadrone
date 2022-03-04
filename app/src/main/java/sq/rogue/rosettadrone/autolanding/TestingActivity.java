@@ -71,7 +71,14 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
 
     private FlightController flightController;
     private Thread FCTestThread = null;
+    private Thread targetDetection = null;
+    private TargetDetect targetDetect = null;
     private DrawingLandingPointThread drawingLandingPointThread;
+    private Bitmap bitmap = null;
+    private Mat frame = null;
+    private boolean keep = false;
+
+    private int method = 0;
 
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -209,11 +216,12 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.targetTestBtn:{
+                keep = true;
                 testTargetDetect();
                 break;
             }
             case R.id.flightTestBtn:{
-
+                keep = false;
                 break;
             }
             case R.id.targetAndFlightTestBtn:{
@@ -222,6 +230,13 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.fullStartTestBtn:{
+//                if(targetDetection.isAlive()) {
+//                    try{
+//                        targetDetection.interrupt();
+//                    }catch(Exception e) {
+//                        Log.d(TAG, "endingTargetDetection"+e.getMessage());
+//                    }
+//                }
                 visualLanding = new VisualLanding(codecManager);
                 visualLanding.startVisualLanding();
                 break;
@@ -236,10 +251,23 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
 ////                                    }
 ////                                }
 ////                            });
-
-                    visualLanding.visualLandingFlightControl.endVisualLandingFlightControl();
-
-                    EventBus.getDefault().post(new ExitEvent());
+                boolean done = false;
+                if(visualLanding != null) {
+                    if (visualLanding.visualLandingFlightControl != null) {
+                        visualLanding.visualLandingFlightControl.endVisualLandingFlightControl();
+                        done = true;
+                    }
+                }
+                if(!done) {
+                    flightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if(djiError != null) {
+                                Log.d(TAG, djiError.getDescription());
+                            }
+                        }
+                    });
+                }
                 break;
             }
             case R.id.multiTest1Btn:{
@@ -292,22 +320,69 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
 
     //---------------test method-------------
     private void testTargetDetect() {
-        TargetDetect targetDetect = new TargetDetect(codecManager);
-        Mat frame = targetDetect.getTestMat();
-        Bitmap bitmap = null;
-        if(frame != null) {
+        targetDetect = new TargetDetect(codecManager);
+        if(targetDetection == null) {
+            targetDetection = new Thread(targetDetect);
+        }
+        targetDetection.start();
+
+        //------------------------------------------------------
+//        frame = targetDetect.getTestMat();
+//        bitmap = null;
+//        if (frame != null) {
+//            if (frame.cols() > 0 && frame.rows() > 0) {
+//                bitmap = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.ARGB_8888);
+//                Utils.matToBitmap(frame, bitmap);
+//            }
+//        } else {
+//            Log.e(TAG, "fail to create the bitmap");
+//        }
+//        imageView.setImageBitmap(bitmap);
+//        imageView.setVisibility(View.VISIBLE);
+
+        //------------------------------------------------------
+//        frame = targetDetect.testingThresholdFrame();
+//        int cnt = 0;
+//        while(keep) {
+//            cnt++;
+//            if(cnt % 20 == 0) {
+//                frame = targetDetect.frameThreshold;
+//                bitmap = null;
+//                if (frame != null) {
+//                    if (frame.cols() > 0 && frame.rows() > 0) {
+//                        bitmap = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.ARGB_8888);
+//                        Utils.matToBitmap(frame, bitmap);
+//                    }
+//                } else {
+//                    Log.e(TAG, "fail to create the bitmap");
+//                }
+//                imageView.setImageBitmap(bitmap);
+//                imageView.setVisibility(View.VISIBLE);
+//            }
+//        }
+
+        //------------------------------------------------------
+        frame = targetDetect.testingThresholdFrame();
+        bitmap = null;
+        if (frame != null) {
             if (frame.cols() > 0 && frame.rows() > 0) {
                 bitmap = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(frame, bitmap);
             }
-        }else {
+        } else {
             Log.e(TAG, "fail to create the bitmap");
         }
         imageView.setImageBitmap(bitmap);
         imageView.setVisibility(View.VISIBLE);
 
-        Thread targetDetection = new Thread(targetDetect);
-        targetDetection.start();
+        //------------------------------------------------------
+        if(method == 1){
+            //while
+        }else if(method == 2){
+            //threshold frame
+        }else if(method == 3){
+            //
+        }
     }
 
     private void getDataFromET() {

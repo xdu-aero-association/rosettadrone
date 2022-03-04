@@ -38,13 +38,13 @@ public class VisualLanding {
 
         startGimbalTask(GimbalTaskMode.ADJUST);
 
-        if(checkVisualLanding()){
+//        if(checkVisualLanding()){
             Thread visualLandingFlightControlThread = new Thread(visualLandingFlightControl);
             visualLandingFlightControlThread.start();
             Log.d(TAG, "visualLandingFlightControl start");
-        }else {
-            Log.d(TAG, "Start visual landing failed, because the target is not in vision.");
-        }
+//        }else {
+//            Log.d(TAG, "Start visual landing failed, because the target is not in vision.");
+//        }
     }
 
     private boolean checkVisualLanding() {
