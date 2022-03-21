@@ -24,21 +24,21 @@
                 android:id="@+id/targetAndGimbalTestBtn"
                 android:layout_width="90dp"
                 android:layout_height="wrap_content"
-                android:text="target&amp;gimbal" />
+                android:text="yuvmode" />
 
             <Button
                 android:id="@+id/targetTestBtn"
                 android:layout_width="90dp"
                 android:layout_height="wrap_content"
                 android:layout_toRightOf="@id/targetAndGimbalTestBtn"
-                android:text="target test" />
+                android:text="get pic" />
 
             <Button
                 android:id="@+id/flightTestBtn"
                 android:layout_width="90dp"
                 android:layout_height="55dp"
                 android:layout_toRightOf="@+id/targetTestBtn"
-                android:text="" />
+                android:text="yuv detect" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -76,7 +76,7 @@
                 android:id="@+id/multiTest1Btn"
                 android:layout_width="40dp"
                 android:layout_height="35dp"
-                android:text="p" />
+                android:text="!!" />
 
             <Button
                 android:id="@+id/multiTest2Btn"

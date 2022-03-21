@@ -1,9 +1,32 @@
 package sq.rogue.rosettadrone.autolanding;
 
+import static org.opencv.imgproc.Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C;
+import static org.opencv.imgproc.Imgproc.CHAIN_APPROX_NONE;
+import static org.opencv.imgproc.Imgproc.COLOR_RGB2GRAY;
+import static org.opencv.imgproc.Imgproc.COLOR_YUV2BGR;
+import static org.opencv.imgproc.Imgproc.COLOR_YUV2BGR_NV12;
+import static org.opencv.imgproc.Imgproc.COLOR_YUV2GRAY_420;
+import static org.opencv.imgproc.Imgproc.COLOR_YUV2RGB_I420;
+import static org.opencv.imgproc.Imgproc.RETR_LIST;
+import static org.opencv.imgproc.Imgproc.THRESH_BINARY_INV;
+import static org.opencv.imgproc.Imgproc.adaptiveThreshold;
+import static org.opencv.imgproc.Imgproc.contourArea;
+import static org.opencv.imgproc.Imgproc.cvtColor;
+import static org.opencv.imgproc.Imgproc.findContours;
+import static org.opencv.imgproc.Imgproc.minAreaRect;
+import static org.opencv.imgproc.Imgproc.moments;
+import static org.opencv.imgproc.Imgproc.resize;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.graphics.YuvImage;
+import android.media.MediaFormat;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -19,8 +42,17 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.RotatedRect;
+import org.opencv.imgproc.Moments;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +64,7 @@ import dji.common.flightcontroller.virtualstick.YawControlMode;
 import dji.common.product.Model;
 import dji.common.util.CommonCallbacks;
 import dji.lidar_map.my_point_3d.Point3D;
+import dji.midware.data.model.P3.Ta;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.camera.Camera;
 import dji.sdk.camera.VideoFeeder;
@@ -57,9 +90,6 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private ImageView imageView;
     protected TextureView videoSurface = null;
     private SurfaceView drawingSurface = null;
-//    private EditText longitudeET;
-//    private EditText latitudeET;
-//    private EditText altitudeET;
     private EditText pidPET;
     private EditText pidIET;
     private EditText pidDET;
@@ -77,8 +107,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private Bitmap bitmap = null;
     private Mat frame = null;
     private boolean keep = false;
-
-    private int method = 0;
+    public byte[] yuv = null;
 
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -108,12 +137,15 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         //video read in 1
         videoFeed = VideoFeeder.getInstance().provideTranscodedVideoFeed();
         videoFeed.addVideoDataListener(new VideoFeeder.VideoDataListener() {
+            //raw H264 video data
             @Override
             public void onReceive(byte[] videoBuffer, int size) {
                 Log.d(TAG, "Video size:" + size);
             }
         });
     }
+
+    
 
     @Override
     public void onResume() {
@@ -213,6 +245,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
             case R.id.targetAndGimbalTestBtn:{
                 //test for the 'check' before visual landing
                 Tools.showToast(this, "Abandoned.");
+                yuvTest();
                 break;
             }
             case R.id.targetTestBtn:{
@@ -221,7 +254,9 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.flightTestBtn:{
-                keep = false;
+                targetDetect = new TargetDetect(this, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+                targetDetection = new Thread(targetDetect);
+                targetDetection.start();
                 break;
             }
             case R.id.targetAndFlightTestBtn:{
@@ -230,13 +265,6 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.fullStartTestBtn:{
-//                if(targetDetection.isAlive()) {
-//                    try{
-//                        targetDetection.interrupt();
-//                    }catch(Exception e) {
-//                        Log.d(TAG, "endingTargetDetection"+e.getMessage());
-//                    }
-//                }
                 visualLanding = new VisualLanding(codecManager);
                 visualLanding.startVisualLanding();
                 break;
@@ -271,9 +299,10 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.multiTest1Btn:{
-                //pitch pid param adjust
-                getDataFromET();
-                EventBus.getDefault().post(new PIDParamChangeEvent(a, b, c, 1));
+//                //pitch pid param adjust
+//                getDataFromET();
+//                EventBus.getDefault().post(new PIDParamChangeEvent(a, b, c, 1));
+                codecManager.enabledYuvData(false);
                 break;
             }
             case R.id.multiTest2Btn:{
@@ -283,9 +312,9 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.multiTest3Btn:{
-                //vertical throttle param adjust
-                getDataFromET();
-                EventBus.getDefault().post(new PIDParamChangeEvent(a, b, c, 3));
+                targetDetect = new TargetDetect(codecManager, this);
+                targetDetection = new Thread(targetDetect);
+                targetDetection.start();
                 break;
             }
             default: break;
@@ -319,16 +348,23 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     }
 
     //---------------test method-------------
-    private void testTargetDetect() {
-        targetDetect = new TargetDetect(codecManager);
-        if(targetDetection == null) {
-            targetDetection = new Thread(targetDetect);
-        }
-        targetDetection.start();
 
+    private void testTargetDetect() {
+
+        targetDetect = new TargetDetect(this, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+        imageView.setVisibility(View.VISIBLE);
+//        targetDetect.codecManager = new DJICodecManager();
+//        targetDetect.codecManager = null;
+//        targetDetect.codecManager = codecManager;
+////        while(keep) {
+//            targetDetect = new TargetDetect(codecManager, this);
+//            if (targetDetection == null) {
+//                targetDetection = new Thread(targetDetect);
+//                targetDetection.start();
+//            }
+        
         //------------------------------------------------------
 //        frame = targetDetect.getTestMat();
-//        bitmap = null;
 //        if (frame != null) {
 //            if (frame.cols() > 0 && frame.rows() > 0) {
 //                bitmap = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.ARGB_8888);
@@ -340,51 +376,182 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
 //        imageView.setImageBitmap(bitmap);
 //        imageView.setVisibility(View.VISIBLE);
 
-        //------------------------------------------------------
-//        frame = targetDetect.testingThresholdFrame();
-//        int cnt = 0;
-//        while(keep) {
-//            cnt++;
-//            if(cnt % 20 == 0) {
-//                frame = targetDetect.frameThreshold;
-//                bitmap = null;
-//                if (frame != null) {
-//                    if (frame.cols() > 0 && frame.rows() > 0) {
-//                        bitmap = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.ARGB_8888);
-//                        Utils.matToBitmap(frame, bitmap);
-//                    }
-//                } else {
-//                    Log.e(TAG, "fail to create the bitmap");
-//                }
-//                imageView.setImageBitmap(bitmap);
-//                imageView.setVisibility(View.VISIBLE);
-//            }
 //        }
 
         //------------------------------------------------------
-        frame = targetDetect.testingThresholdFrame();
-        bitmap = null;
-        if (frame != null) {
-            if (frame.cols() > 0 && frame.rows() > 0) {
-                bitmap = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(frame, bitmap);
-            }
-        } else {
-            Log.e(TAG, "fail to create the bitmap");
-        }
-        imageView.setImageBitmap(bitmap);
-        imageView.setVisibility(View.VISIBLE);
+
+//        Bitmap bitmap = videoSurface.getBitmap();
+//        imageView.setImageBitmap(bitmap);
+//        imageView.setVisibility(View.VISIBLE);
 
         //------------------------------------------------------
-        if(method == 1){
-            //while
-        }else if(method == 2){
-            //threshold frame
-        }else if(method == 3){
-            //
-        }
+//        if(yuvFrame != null){
+//            bitmap = Bitmap.createBitmap(yuvFrame.width(), frame.height(), Bitmap.Config.ARGB_8888);
+//            imageView.setImageBitmap(bitmap);
+//            imageView.setVisibility(View.VISIBLE);
+//        }
+        //------------------------------------------------------
+//            yuvFrame = new Mat(codecManager.getVideoHeight(), codecManager.getVideoWidth(), CvType.CV_8UC1);
+//            yuvFrame.put(0, 0, yuv);
+//            if(yuvFrame != null) {
+////                bitmap = Bitmap.createBitmap(yuvFrame.width(), yuvFrame.height(), Bitmap.Config.ARGB_8888);
+//                bitmap = BitmapFactory.decodeByteArray(yuv, 0, yuv.length);
+//                imageView.setImageBitmap(bitmap);
+//                imageView.setVisibility(View.VISIBLE);
+//            }
+
+            //---------------------yuv2bitmap
+//            long time1 = System.currentTimeMillis();
+//            ByteArrayOutputStream out = new ByteArrayOutputStream();
+//            YuvImage yuvImage = new YuvImage(yuv, ImageFormat.NV21, codecManager.getVideoWidth(), codecManager.getVideoHeight(),null);
+//            yuvImage.compressToJpeg(new Rect(0, 0, codecManager.getVideoWidth(), codecManager.getVideoHeight()), 50, out);
+//            byte[] imageBytes = out.toByteArray();
+//            Bitmap image = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+//            imageView.setImageBitmap(image);
+//            long time2 = System.currentTimeMillis();
+//            long yuvDuration = time2-time1;
+//            Log.d(TAG, "YUVImageDuration: "+yuvDuration);
+
+            //----------------------
+//            frame = targetDetect.yuvTest(yuv, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+//            if(frame != null){
+//                Bitmap bitmap1 = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.ARGB_8888);
+//                imageView.setImageBitmap(bitmap1);
+//                imageView.setVisibility(View.VISIBLE);
+//            }
+            //-----------------------yuv2mat
+            Mat mat1 = targetDetect.yuvTest();
+            bitmap = Bitmap.createBitmap(mat1.width(), mat1.height(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(mat1, bitmap);
+
+            //-------------------------yuv detect
+//            Mat de = targetDetect.yuvTest(yuv, w, h);
+//            bitmap = Bitmap.createBitmap(de.width(), de.height(), Bitmap.Config.ARGB_8888);
+//            Utils.matToBitmap(de, bitmap);
+            imageView.setImageBitmap(bitmap);
+
     }
 
+    int cnt = 0;
+    long timeS, time1;
+    private List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+    int videoHeight, videoWidth, resizeH, resizeW;
+    private void yuvTest(){
+        videoHeight = codecManager.getVideoHeight();
+        videoWidth = codecManager.getVideoWidth();
+        resizeW = 200;
+        resizeH = 200 * videoHeight / videoWidth;
+
+        codecManager.enabledYuvData(true);
+        codecManager.setYuvDataCallback(new DJICodecManager.YuvDataCallback() {
+            @Override
+            public void onYuvDataReceived(MediaFormat mediaFormat, ByteBuffer byteBuffer, int dataSize, int i1, int i2) {
+                Log.d(TAG, "YUVDataReceivedStart");
+                //-------------------------------------
+                if(cnt % 10 == 0){
+                    cnt = 0;
+                    synchronized (this){
+
+                        yuv = new byte[dataSize];
+                        byteBuffer.get(yuv);
+
+                        //-----------------------------
+                        timeS = System.currentTimeMillis();
+                        long time1 = timeS;
+
+                        Mat yuvFrame = new Mat(videoHeight+videoHeight/2, videoWidth, CvType.CV_8UC1);
+                        if(yuv == null){
+                            Log.d(TAG, "detectReturn");
+                        }
+                        yuvFrame.put(0, 0, yuv);
+                        if(yuvFrame == null || yuvFrame.empty()) {
+                            Log.d(TAG, "detectReturn2");
+                        }
+                        Log.d(TAG, "yuvFrame: "+(System.currentTimeMillis()-timeS));
+                        timeS = System.currentTimeMillis();
+
+                        Mat frameTemp = new Mat(videoHeight, videoWidth, CvType.CV_8UC3);
+
+                        //yuv 2 bgr
+                        cvtColor(yuvFrame, frameTemp, COLOR_YUV2RGB_I420);
+
+                        //resize
+                        Mat frameDealing = new Mat(resizeH, resizeW, CvType.CV_8UC4);
+                        resize(frameTemp, frameDealing, frameDealing.size(), 0, 0);
+                        Log.d(TAG, "resize: "+(System.currentTimeMillis()-timeS));
+                        timeS = System.currentTimeMillis();
+
+                        //RGB 2 gray
+                        cvtColor(frameDealing, frameDealing, COLOR_RGB2GRAY);
+                        Log.d(TAG, "rgb2gray: "+(System.currentTimeMillis()-timeS));
+                        timeS = System.currentTimeMillis();
+
+                        //gray 2 binary frame
+//        threshold(frameDealing, frameDealing, 200 ,250, THRESH_BINARY);   // ? enable threshold value for self-adaptation
+                        adaptiveThreshold(frameDealing, frameDealing, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 15, 20);
+                        Log.d(TAG, "binary: "+(System.currentTimeMillis()-timeS));
+                        timeS = System.currentTimeMillis();
+
+                        //get contours
+                        findContours(frameDealing, contours, new Mat(), RETR_LIST, CHAIN_APPROX_NONE);
+
+                        //get the contours index
+                        int targetIndex = 0;
+                        if(contours.size()>0) {
+                            MatOfPoint target = contours.get(0);
+                            double targetArea = contourArea(target);
+                            double area, ratio, w, h;
+                            RotatedRect rect;
+
+                            for(int i=0; i<contours.size(); i ++) {
+
+                                MatOfPoint temp = contours.get(i);
+
+                                //area judge
+                                area = contourArea(temp);
+                                if(area < targetArea)
+                                    continue;
+
+                                //transfer
+                                MatOfPoint2f temp2 = new MatOfPoint2f();
+                                temp.convertTo(temp2, CvType.CV_32F);
+
+                                //rect, w & h ratio judgement
+                                rect = minAreaRect(temp2);
+                                w = rect.size.width;
+                                h = rect.size.height;
+                                if(w!=0 && h!=0) {
+                                    ratio = w/h;
+                                }else
+                                    continue;
+
+                                if(Math.abs(ratio-1) < 0.1) {
+                                    targetArea = area;
+                                    targetIndex = i;
+                                }
+                            }
+                        }
+                        Log.d(TAG, "getIndex: "+(System.currentTimeMillis()-timeS));
+                        timeS = System.currentTimeMillis();
+
+                        //get center
+                        Moments Moments = moments(contours.get(targetIndex));
+                        PointF tp = new PointF((float) (Moments.m10 / Moments.m00)/resizeW, (float) (Moments.m01 / Moments.m00)/resizeH);
+
+                        EventBus.getDefault().postSticky(new TargetPointResultEvent(tp));
+
+                        Log.d(TAG, "theDetectedPointIs: "+tp);
+
+                        Log.d(TAG, "detectionDuration:"+(System.currentTimeMillis()-time1));
+                    }
+                }
+                cnt ++;
+                //-------------------------------------
+            }
+        });
+    }
+//
+//    A/libc: Fatal signal 6 (SIGABRT), code -6 in tid 3163 (RenderThread)
     private void getDataFromET() {
         if(pidPET.getText().toString() != null){
             a = Float.parseFloat(pidPET.getText().toString());

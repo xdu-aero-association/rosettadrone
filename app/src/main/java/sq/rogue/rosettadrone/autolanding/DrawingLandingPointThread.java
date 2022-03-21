@@ -3,6 +3,7 @@ package sq.rogue.rosettadrone.autolanding;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.util.Log;
@@ -39,7 +40,7 @@ public class DrawingLandingPointThread extends Thread{
         paint.setStrokeWidth(100f);
     }
 
-    @Subscribe(sticky = true, threadMode = ThreadMode.ASYNC)
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     public void setTargetPoint(TargetPointResultEvent targetPointResultEvent) {
         if(targetPointResultEvent.targetPoint != null) {
             targetPoint = targetPointResultEvent.targetPoint;
@@ -48,31 +49,50 @@ public class DrawingLandingPointThread extends Thread{
         }
     }
 
+    long time1;
+    long time2;
+    long timeDuration;
+    Canvas canvas;
     @Override
     public void run() {
 
         EventBus.getDefault().register(this);
-        Canvas canvas = new Canvas();
 
         while(drawingControl) {
-            long time1 = System.currentTimeMillis();
+//            synchronized (this) {
+                time1 = System.currentTimeMillis();
+                timeDuration = time1 - time2;
+//                Log.d(TAG, "twoDrawingDuration: " + timeDuration);
 
-            canvas = drawingHolder.lockCanvas();
-            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-            if(targetPoint != null) {
-                canvas.drawCircle(targetPoint.x * width, targetPoint.y * height, 50f, paint);
-                long time2 = System.currentTimeMillis();
-                long duration = time2 - time1;
-                Log.d(TAG, "DrawThePoint"+" "+targetPoint.x+" "+targetPoint.y
-                        + "\n" + " ProcessingDuration: " + duration);
-            }
-            drawingHolder.unlockCanvasAndPost(canvas);
-
-//            try{
-//                Thread.sleep(50);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
+                canvas = drawingHolder.lockCanvas();
+                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+                if (targetPoint != null) {
+                    canvas.drawCircle(targetPoint.x * width, targetPoint.y * height, 50f, paint);
+                    time2 = System.currentTimeMillis();
+                    timeDuration = time2 - time1;
+//                    Log.d(TAG, "DrawThePoint" + " " + targetPoint.x + " " + targetPoint.y
+//                            + "\n" + " ProcessingDuration: " + timeDuration);
+                }
+                drawingHolder.unlockCanvasAndPost(canvas);
 //            }
         }
+    }
+
+    public void drawing(PointF newTargetPoint) {
+        targetPoint = newTargetPoint;
+        time1 = System.currentTimeMillis();
+        timeDuration = time1 - time2;
+        Log.d(TAG, "twoDrawingDuration: " + timeDuration);
+
+        canvas = drawingHolder.lockCanvas();
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        if (targetPoint != null) {
+            canvas.drawCircle(targetPoint.x * width, targetPoint.y * height, 50f, paint);
+            time2 = System.currentTimeMillis();
+            timeDuration = time2 - time1;
+            Log.d(TAG, "DrawThePoint" + " " + targetPoint.x + " " + targetPoint.y
+                    + "\n" + " ProcessingDuration: " + timeDuration);
+        }
+        drawingHolder.unlockCanvasAndPost(canvas);
     }
 }

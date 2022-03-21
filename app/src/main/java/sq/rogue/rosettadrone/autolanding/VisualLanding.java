@@ -38,13 +38,13 @@ public class VisualLanding {
 
         startGimbalTask(GimbalTaskMode.ADJUST);
 
-//        if(checkVisualLanding()){
+        if(checkVisualLanding()){
             Thread visualLandingFlightControlThread = new Thread(visualLandingFlightControl);
             visualLandingFlightControlThread.start();
             Log.d(TAG, "visualLandingFlightControl start");
-//        }else {
-//            Log.d(TAG, "Start visual landing failed, because the target is not in vision.");
-//        }
+        }else {
+            Log.d(TAG, "Start visual landing failed, because the target is not in vision.");
+        }
     }
 
     private boolean checkVisualLanding() {
@@ -56,7 +56,8 @@ public class VisualLanding {
             if(((Aircraft)RDApplication.getProductInstance()).getFlightController()
                     .getState().getAircraftLocation().getAltitude() < 8) {
                 visualLandingFlightControl.sendFlightUpCommand();
-                Log.d(TAG, "send Flight up command");
+                visualLandingFlightControl.endCheckFlight();
+                Log.d(TAG, "sendFlightUpCommand");
             }
 
             if(targetDetect.isTargetInVision()) {
@@ -64,7 +65,6 @@ public class VisualLanding {
                 return true;
             }
         }
-        visualLandingFlightControl.endCheckFlight();
         return false;
     }
 

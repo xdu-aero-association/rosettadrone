@@ -3,6 +3,8 @@ package sq.rogue.rosettadrone.autolanding;
 import android.graphics.PointF;
 import android.util.Log;
 
+import java.lang.annotation.Target;
+
 public class TargetPointResultEvent {
     protected PointF targetPoint = null;
     protected float radius = 0;
@@ -12,7 +14,11 @@ public class TargetPointResultEvent {
         this.radius = radius;
     }
 
-    public TargetPointResultEvent(){
+    public TargetPointResultEvent(PointF targetPoint){
+        this.targetPoint = targetPoint;
+    }
+
+    public TargetPointResultEvent() {
 
     }
 
