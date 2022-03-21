@@ -24,13 +24,11 @@ import androidx.fragment.app.FragmentActivity;
 import com.amap.api.maps2d.AMap;
 import com.amap.api.maps2d.CameraUpdate;
 import com.amap.api.maps2d.CameraUpdateFactory;
+import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,18 +58,12 @@ import sq.rogue.rosettadrone.DJISimulatorApplication;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 
-//import com.google.android.gms.maps.CameraUpdate;
-//import com.google.android.gms.maps.CameraUpdateFactory;
-//import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-//import com.google.android.gms.maps.model.LatLng;
-//import com.google.android.gms.maps.model.Marker;
-//import com.google.android.gms.maps.model.MarkerOptions;
-
-public class Waypoint1Activity extends FragmentActivity implements View.OnClickListener, AMap.OnMapClickListener, OnMapReadyCallback {
+public class Waypoint1Activity extends FragmentActivity implements View.OnClickListener, AMap.OnMapClickListener {
 
     protected static final String TAG = "GSDemoActivity";
 
-    private AMap gMap;
+    private MapView mapView;
+    private AMap aMap;
 
     private Button locate, add, clear;
     private Button config, upload, start, stop;
@@ -176,9 +168,8 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
 
         initUI();
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        mapView = (MapView) findViewById(R.id.map);
+        mapView.onCreate(savedInstanceState);
 
         addListener();
 
@@ -285,26 +276,22 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         return instance;
     }
 
-    private void setUpMap() {
-        gMap.setOnMapClickListener(this);// add the listener for click for amap object
-
-    }
-
-    //@Override
+    @Override
     public void onMapClick(LatLng point) {
-        if (isAdd == true) {
+        if (isAdd == true){
             markWaypoint(point);
             Waypoint mWaypoint = new Waypoint(point.latitude, point.longitude, altitude);
             //Add Waypoints to Waypoint arraylist;
             if (waypointMissionBuilder != null) {
                 waypointList.add(mWaypoint);
                 waypointMissionBuilder.waypointList(waypointList).waypointCount(waypointList.size());
-            } else {
+            }else
+            {
                 waypointMissionBuilder = new WaypointMission.Builder();
                 waypointList.add(mWaypoint);
                 waypointMissionBuilder.waypointList(waypointList).waypointCount(waypointList.size());
             }
-        } else {
+        }else{
             setResultToToast("Cannot Add Waypoint");
         }
     }
@@ -330,30 +317,31 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
                 }
 
                 if (checkGpsCoordination(droneLocationLat, droneLocationLng)) {
-                    droneMarker = gMap.addMarker(markerOptions);
+                    droneMarker = aMap.addMarker(markerOptions);
                 }
             }
         });
     }
 
-    private void markWaypoint(LatLng point) {
+    private void markWaypoint(LatLng point){
         //Create MarkerOptions object
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(point);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-        Marker marker = gMap.addMarker(markerOptions);
+        Marker marker = aMap.addMarker(markerOptions);
         mMarkers.put(mMarkers.size(), marker);
     }
+
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.locate: {
+            case R.id.locate:{
                 updateDroneLocation();
                 cameraUpdate(); // Locate the drone's place
                 break;
             }
-            case R.id.add: {
+            case R.id.add:{
                 enableDisableAdd();
                 break;
             }
@@ -361,7 +349,7 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        gMap.clear();
+                        aMap.clear();
                     }
 
                 });
@@ -370,19 +358,19 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
                 updateDroneLocation();
                 break;
             }
-            case R.id.config: {
+            case R.id.config:{
                 showSettingDialog();
                 break;
             }
-            case R.id.upload: {
+            case R.id.upload:{
                 uploadWayPointMission();
                 break;
             }
-            case R.id.start: {
+            case R.id.start:{
                 startWaypointMission();
                 break;
             }
-            case R.id.stop: {
+            case R.id.stop:{
                 stopWaypointMission();
                 break;
             }
@@ -391,13 +379,14 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         }
     }
 
-    private void cameraUpdate() {
+    private void cameraUpdate(){
         LatLng pos = new LatLng(droneLocationLat, droneLocationLng);
         float zoomlevel = (float) 18.0;
         CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(pos, zoomlevel);
-        gMap.moveCamera(cu);
+        aMap.moveCamera(cu);
 
     }
+
 
     private void enableDisableAdd() {
         if (isAdd == false) {
@@ -581,25 +570,6 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
 
     }
 
-    //@Override
-    public void onMapReady(AMap googleMap) {
-        if (gMap == null) {
-            gMap = googleMap;
-            setUpMap();
-        }
 
-        LatLng shenzhen = new LatLng(62.5362, 12.9454);
-        gMap.addMarker(new MarkerOptions().position(shenzhen).title("Marker in Norway"));
-        gMap.moveCamera(CameraUpdateFactory.newLatLng(shenzhen));
-    }
 
-    //@Override
-    //public void onMapClick(com.amap.api.maps2d.model.LatLng latLng) {
-
-    //}
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-
-    }
 }

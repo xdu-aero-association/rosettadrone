@@ -43,7 +43,7 @@
                 android:background="#00000000"
                 android:text="Clear"
                 android:layout_weight="1" />
-
+        </LinearLayout>
             <Button
                 android:id="@+id/config"
                 android:layout_width="match_parent"
@@ -77,13 +77,14 @@
                 android:layout_weight="1" />
         </LinearLayout>
 
-        <fragment
-            android:id="@+id/map"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#00000000"
-            class="com.google.android.gms.maps.SupportMapFragment" />
-
-    </LinearLayout>
+            android:orientation="horizontal">
+            <com.amap.api.maps2d.MapView
+                android:id="@+id/map"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
 
 </LinearLayout>
