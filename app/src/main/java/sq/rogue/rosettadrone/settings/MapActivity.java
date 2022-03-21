@@ -28,9 +28,6 @@ import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +71,7 @@ import sq.rogue.rosettadrone.RDApplication;
 
 //public class HelpActivity extends AppCompatActivity implements OnMapReadyCallback{
 //public class HelpActivity extends AppCompatActivity implements PreferenceFragmentCompat.OnPreferenceStartScreenCallback, OnMapReadyCallback{
-public class MapActivity extends FragmentActivity implements View.OnClickListener, AMap.OnMapClickListener, OnMapReadyCallback {
+public class MapActivity extends FragmentActivity implements View.OnClickListener, AMap.OnMapClickListener {
     private static final String TAG = MapActivity.class.getSimpleName();
 
     //private GoogleMap gMap;
@@ -158,7 +155,26 @@ public class MapActivity extends FragmentActivity implements View.OnClickListene
         stop.setOnClickListener(this);
 
     }
+    private void initMapView() {
 
+        if (aMap == null) {
+            aMap = mapView.getMap();
+            aMap.setOnMapClickListener(this);// add the listener for click for amap object
+        }
+
+        com.amap.api.maps2d.model.LatLng Xian = new com.amap.api.maps2d.model.LatLng(34.1234, 108.8341);
+        aMap.addMarker(new MarkerOptions().position(Xian).title("Marker in Xi'an"));
+        aMap.moveCamera(CameraUpdateFactory.newLatLng(Xian));
+        //updateDroneLocation();
+        //LatLng pos = new LatLng(droneLocationLat, droneLocationLng);
+        //aMap.addMarker(new MarkerOptions().position(pos).title("Marker in Xi'an"));
+
+        //aMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
+
+
+
+
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -187,9 +203,9 @@ public class MapActivity extends FragmentActivity implements View.OnClickListene
 
         initUI();
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        mapView = (MapView) findViewById(R.id.map);
+        mapView.onCreate(savedInstanceState);
+        initMapView();
 
         addListener();
     }
@@ -303,24 +319,7 @@ public class MapActivity extends FragmentActivity implements View.OnClickListene
         //aMap.setOnMapClickListener();
     }
 
-    //@Override
-    public void onMapClick(LatLng point) {
-        if (isAdd == true) {
-            markWaypoint(point);
-            Waypoint mWaypoint = new Waypoint(point.latitude, point.longitude, altitude);
-            //Add Waypoints to Waypoint arraylist;
-            if (waypointMissionBuilder != null) {
-                waypointList.add(mWaypoint);
-                waypointMissionBuilder.waypointList(waypointList).waypointCount(waypointList.size());
-            } else {
-                waypointMissionBuilder = new WaypointMission.Builder();
-                waypointList.add(mWaypoint);
-                waypointMissionBuilder.waypointList(waypointList).waypointCount(waypointList.size());
-            }
-        } else {
-            setResultToToast("Cannot Add Waypoint");
-        }
-    }
+
 
     public static boolean checkGpsCoordination(double latitude, double longitude) {
         return (latitude > -90 && latitude < 90 && longitude > -180 && longitude < 180) && (latitude != 0f && longitude != 0f);
@@ -619,15 +618,26 @@ public class MapActivity extends FragmentActivity implements View.OnClickListene
         setTitle(R.string.settings);
     }
 
+
+
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-
+    public void onMapClick(com.amap.api.maps2d.model.LatLng latLng) {
+        if (isAdd == true) {
+            markWaypoint(latLng);
+            Waypoint mWaypoint = new Waypoint(latLng.latitude, latLng.longitude, altitude);
+            //Add Waypoints to Waypoint arraylist;
+            if (waypointMissionBuilder != null) {
+                waypointList.add(mWaypoint);
+                waypointMissionBuilder.waypointList(waypointList).waypointCount(waypointList.size());
+            } else {
+                waypointMissionBuilder = new WaypointMission.Builder();
+                waypointList.add(mWaypoint);
+                waypointMissionBuilder.waypointList(waypointList).waypointCount(waypointList.size());
+            }
+        } else {
+            setResultToToast("Cannot Add Waypoint");
+        }
     }
-
-    //@Override
-    //public void onMapClick(com.amap.api.maps2d.model.LatLng latLng) {
-
-    //}
 
     //@Override
     //public void onMapReady(GoogleMap googleMap) {

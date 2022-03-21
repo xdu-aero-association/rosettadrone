@@ -1,4 +1,5 @@
 package sq.rogue.rosettadrone;
+
 // Acknowledgements:
 // IP address validation: https://stackoverflow.com/questions/3698034/validating-ip-in-android/11545229#11545229
 // Hide keyboard: https://stackoverflow.com/questions/16495440/how-to-hide-keyboard-by-default-and-show-only-when-click-on-edittext
@@ -53,15 +54,13 @@ import com.MAVLink.MAVLinkPacket;
 import com.MAVLink.Messages.MAVLinkMessage;
 import com.MAVLink.Parser;
 import com.amap.api.maps2d.AMap;
+import com.amap.api.maps2d.CameraUpdate;
 import com.amap.api.maps2d.CameraUpdateFactory;
 import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -90,7 +89,6 @@ import java.util.zip.ZipOutputStream;
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
-import dji.common.model.LocationCoordinate2D;
 import dji.common.product.Model;
 import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
@@ -106,22 +104,8 @@ import sq.rogue.rosettadrone.settings.Waypoint1Activity;
 import sq.rogue.rosettadrone.settings.Waypoint2Activity;
 import sq.rogue.rosettadrone.video.NativeHelper;
 import sq.rogue.rosettadrone.video.VideoService;
-
-//import com.google.android.gms.maps.CameraUpdateFactory;
-//import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-//import com.google.android.gms.maps.model.LatLng;
-//import com.google.android.gms.maps.model.Marker;
-//import com.google.android.gms.maps.model.MarkerOptions;
-//修改一下用到的东西
-//import com.amap.api.maps2d.AMap;
-//import com.amap.api.maps2d.CameraUpdate;
-//import com.amap.api.maps2d.CameraUpdateFactory;
-//import com.amap.api.maps2d.model.BitmapDescriptorFactory;
-//import com.amap.api.maps2d.model.MarkerOptions;
-
-
 //public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity  implements TextureView.SurfaceTextureListener,View.OnClickListener, AMap.OnMapClickListener {
 
     //    public static final String FLAG_CONNECTION_CHANGE = "dji_sdk_connection_change";
     private final static int RESULT_SETTINGS = 1001;
@@ -144,11 +128,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public static boolean FLAG_APP_NAME_CHANGED = false;
     public static boolean FLAG_MAPS_CHANGED = false;
 
+    //Used for Gaode map
+    private MapView mapView;
+    private AMap  aMap;
 
-    //private GoogleMap  aMap;
-    private AMap aMap;
-    private double droneLocationLat, droneLocationLng;
-    private Marker droneMarker = null;
+
+    private double droneLocationLat = 181, droneLocationLng = 181;
+    private Marker droneMarker =  null;
+
+
 
     private static BaseProduct mProduct;
     private Model mProductModel;
@@ -158,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Handler mUIHandler;
     private LogFragment logDJI;
     private LogFragment logOutbound;
+
     private LogFragment logInbound;
     private int navState = -1;
     private SharedPreferences prefs;
@@ -184,12 +173,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private VideoService mService = null;
     private boolean mIsBound;
     private int m_videoMode = 1;
-    private int mMaptype = GoogleMap.MAP_TYPE_HYBRID;
-    //const donot change
-    private MapView mapView;
+
+
+    //private int mMaptype = GoogleMap.MAP_TYPE_HYBRID;
 
     private VideoFeeder.VideoFeed standardVideoFeeder;
-    protected VideoFeeder.VideoDataListener mReceivedVideoDataListener;
+    protected VideoFeeder.VideoDataListener mReceivedVideoDataListener = null;
     private TextureView videostreamPreviewTtView;
     private TextureView videostreamPreviewTtViewSmall;
     private Camera mCamera;
@@ -198,6 +187,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int videoViewHeight;
     protected SharedPreferences sharedPreferences;
     private boolean mIsTranscodedVideoFeedNeeded = false;
+
+
+
 
     private Runnable djiUpdateRunnable = () -> {
         Intent intent = new Intent(DJISimulatorApplication.FLAG_CONNECTION_CHANGE);
@@ -259,8 +251,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mVideoBitrate = Integer.parseInt(Objects.requireNonNull(sharedPreferences.getString("pref_video_bitrate", "2")));
         mEncodeSpeed = Integer.parseInt(Objects.requireNonNull(sharedPreferences.getString("pref_encode_speed", "2")));
         //------------------------------------------------------------
-        mMaptype = Integer.parseInt(Objects.requireNonNull(prefs.getString("pref_maptype_mode", "2")));
-        logMessageDJI("Mapmode: " + mMaptype);
+        //mMaptype = Integer.parseInt(Objects.requireNonNull(prefs.getString("pref_maptype_mode", "2")));
+        //logMessageDJI("Mapmode: " + mMaptype);
         //------------------------------------------------------------
 
         Intent intent = new Intent(this, VideoService.class);
@@ -463,66 +455,74 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onDestroy();
     }
 
-    //@Override
-    //public void onMapReady(GoogleMap googleMap) {
-    public void onMapReady(AMap googleMap) {//我就是懒狗，不改了
-        Log.d(TAG, "onMapReady()");
 
-        if (aMap == null) {
-            aMap = mapView.getMap();
-            // aMap = googleMap;
-            LinearLayout map_layout = findViewById(R.id.map_view);
-            map_layout.setClickable(true);
-            map_layout.setOnClickListener((map) -> {
-                ViewGroup.LayoutParams map_para = map_layout.getLayoutParams();
-                map_layout.setZ(0.f);
-                map_para.height = LayoutParams.WRAP_CONTENT;
-                map_para.width = LayoutParams.WRAP_CONTENT;
-                map_layout.setLayoutParams(map_para);
-            });
-        }
-        aMap.getUiSettings().setZoomControlsEnabled(false);
-        aMap.setMapType(mMaptype);
-
-        updateDroneLocation();
+    private void CameraUpdate(){
+        LatLng pos = new LatLng(droneLocationLat, droneLocationLng);
+        float zoomlevel = (float) 18.0;
+        CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(pos, zoomlevel);
+        aMap.moveCamera(cu);
     }
+
 
     // Update the drone location based on states from MCU.
     private void updateDroneLocation() {
-
+/*
         if (aMap != null) {
 
             // We initialize the default map location to the same as the default SIM location...
-            LatLng pos;
+            com.amap.api.maps2d.model.LatLng pos;
 
             if (checkGpsCoordination(droneLocationLat, droneLocationLng)) {
-                pos = new LatLng(droneLocationLat, droneLocationLng);
+                pos = new com.amap.api.maps2d.model.LatLng(droneLocationLat, droneLocationLng);
             } else {
                 LocationCoordinate2D loc = mModel.getSimPos2D();
                 if(checkGpsCoordination(loc.getLongitude(),loc.getLongitude())) {
-                    pos = new LatLng(loc.getLatitude(), loc.getLongitude());
+                    pos = new com.amap.api.maps2d.model.LatLng(loc.getLatitude(), loc.getLongitude());
                 }
                 else{
-                    pos = new LatLng(62,12);
+                    pos = new com.amap.api.maps2d.model.LatLng(62,12);
                 }
             }
-
+*/
             //Create MarkerOptions object
-            final MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.position(pos);
-            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.aircraft));
 
-            runOnUiThread(() -> {
+
+
+
+        LatLng pos = new LatLng(droneLocationLat, droneLocationLng);
+        //Create MarkerOptions object
+        final MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(pos);
+        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.aircraft));
+
+
+    runOnUiThread(() -> {
+        if (droneMarker != null) {
+            droneMarker.remove();
+        }
+
+        if (checkGpsCoordination(pos.latitude, pos.longitude)) {
+            droneMarker = aMap.addMarker(markerOptions);
+            aMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
+            //CameraUpdate();
+        }
+    });
+
+
+        /*runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
                 if (droneMarker != null) {
                     droneMarker.remove();
                 }
 
-                if (checkGpsCoordination(pos.latitude, pos.longitude)) {
+                if (checkGpsCoordination(droneLocationLat, droneLocationLng)) {
                     droneMarker = aMap.addMarker(markerOptions);
-                    aMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
+                    //droneMarker.setRotateAngle( * -1.0f);
                 }
-            });
-        }
+            }
+        });*/
+
     }
 
     private void initFlightController() {
@@ -542,8 +542,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return (latitude > -90 && latitude < 90 && longitude > -180 && longitude < 180) && (latitude != 0f && longitude != 0f);
     }
 
+
+
+    //some Init
+    private void initMapView() {
+
+        if (aMap == null) {
+            aMap = mapView.getMap();
+            aMap.setOnMapClickListener(this);// add the listener for click for amap object
+        }
+
+        com.amap.api.maps2d.model.LatLng Xian = new com.amap.api.maps2d.model.LatLng(34.1234, 108.8341);
+        aMap.addMarker(new MarkerOptions().position(Xian).title("Marker in Xi'an"));
+        aMap.moveCamera(CameraUpdateFactory.newLatLng(Xian));
+        //updateDroneLocation();
+        //LatLng pos = new LatLng(droneLocationLat, droneLocationLng);
+        //aMap.addMarker(new MarkerOptions().position(pos).title("Marker in Xi'an"));
+
+        //aMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
+
+
+
+
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+
         Log.e(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
 
@@ -594,7 +622,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mUIHandler = new Handler(Looper.getMainLooper());
         mUIHandler.postDelayed(RunnableUpdateUI, 1000);
 
+
+
+
         Intent aoaIntent = getIntent();
+
+
+
         if (aoaIntent != null) {
             String action = aoaIntent.getAction();
             // assert action != null;
@@ -605,13 +639,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 sendBroadcast(attachedIntent);
             }
         }
+
         deleteApplicationDirectory();
         initLogs();
         initPacketizer();
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+
+        //copy from OnMapReady
+        LinearLayout map_layout = findViewById(R.id.map_view);
+        map_layout.setClickable(true);
+        map_layout.setOnClickListener((map) -> {
+            ViewGroup.LayoutParams map_para = map_layout.getLayoutParams();
+            map_layout.setZ(0.f);
+            map_para.height = LayoutParams.WRAP_CONTENT;
+            map_para.width = LayoutParams.WRAP_CONTENT;
+            map_layout.setLayoutParams(map_para);
+        });
+
+        mapView = (MapView) findViewById(R.id.map);
+        mapView.onCreate(savedInstanceState);
+        initMapView();
+
+        //SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        //        .findFragmentById(R.id.map);
+        //mapFragment.getMapAsync(this);
+
+
+
 
         initFlightController();
 
@@ -1549,11 +1603,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             FLAG_DRONE_LANDING_PROTECTION_CHANGED = false;
         }
 
-        if(FLAG_MAPS_CHANGED){
-            mMaptype = Integer.parseInt(Objects.requireNonNull(prefs.getString("pref_maptype_mode", "0")));
-            aMap.setMapType(mMaptype);
-            FLAG_MAPS_CHANGED = false;
-        }
+        //if(FLAG_MAPS_CHANGED){
+        //    mMaptype = Integer.parseInt(Objects.requireNonNull(prefs.getString("pref_maptype_mode", "0")));
+        //    aMap.setMapType(mMaptype);
+        //    FLAG_MAPS_CHANGED = false;
+        //}
 
     }
 
@@ -1576,8 +1630,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.e(TAG, "onPointerCaptureChanged");
     }
 
+
+    //Used for Gaode
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onClick(View v) {
+
+    }
+
+    @Override
+    public void onMapClick(com.amap.api.maps2d.model.LatLng latLng) {
+
+    }
+
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+
+    }
+
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+
+    }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        return false;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
     }
 

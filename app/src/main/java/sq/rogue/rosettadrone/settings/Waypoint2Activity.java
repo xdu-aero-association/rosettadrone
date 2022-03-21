@@ -21,13 +21,11 @@ import androidx.fragment.app.FragmentActivity;
 import com.amap.api.maps2d.AMap;
 import com.amap.api.maps2d.CameraUpdate;
 import com.amap.api.maps2d.CameraUpdateFactory;
+import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,18 +62,12 @@ import sq.rogue.rosettadrone.DJISimulatorApplication;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 
-//import com.google.android.gms.maps.CameraUpdate;
-//import com.google.android.gms.maps.CameraUpdateFactory;
-//import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-//import com.google.android.gms.maps.model.LatLng;
-//import com.google.android.gms.maps.model.Marker;
-//import com.google.android.gms.maps.model.MarkerOptions;
-
-public class Waypoint2Activity extends FragmentActivity implements View.OnClickListener, AMap.OnMapClickListener, OnMapReadyCallback {
+public class Waypoint2Activity extends FragmentActivity implements View.OnClickListener, AMap.OnMapClickListener {
 
     protected static final String TAG = "Waypoint2Activity";
 
-    private AMap gMap;
+    private MapView mapView;
+    private AMap aMap;
 
     private Button locate, add, clear;
     private Button config, upload, start, stop;
@@ -194,11 +186,13 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
 
     private void initMapView() {
 
-        if (gMap != null) {
-            gMap.setOnMapClickListener(this);// add the listener for click for amap object
+        if (aMap == null) {
+            aMap = mapView.getMap();
+            aMap.setOnMapClickListener(this);// add the listener for click for amap object
         }
 
-        gMap.moveCamera(CameraUpdateFactory.zoomTo(18));
+        aMap.moveCamera(CameraUpdateFactory.zoomTo(18));
+
     }
 
     @Override
@@ -217,9 +211,9 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
         }
 
         initUI();
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+
+        mapView = findViewById(R.id.map);
+        mapView.onCreate(savedInstanceState);
 
         addListener();
         onProductConnectionChange();
@@ -445,7 +439,7 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
                 }
 
                 if (checkGpsCoordination(mAircraftLat, mAircraftLng)) {
-                    droneMarker = gMap.addMarker(markerOptions);
+                    droneMarker = aMap.addMarker(markerOptions);
                     droneMarker.setRotateAngle(droneHeading * -1.0f);
                 }
             }
@@ -500,7 +494,7 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(point);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-        Marker marker = gMap.addMarker(markerOptions);
+        Marker marker = aMap.addMarker(markerOptions);
         mMarkers.put(mMarkers.size(), marker);
     }
 
@@ -520,7 +514,7 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        gMap.clear();
+                        aMap.clear();
                         if (waypointList != null) {
                             waypointList.clear();
                         }
@@ -530,8 +524,11 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
                     }
 
                 });
-
                 waypointMissionBuilder = null;
+                if (mMarkers != null) {
+                    mMarkers.clear();
+                }
+
                 updateDroneLocation();
                 break;
             }
@@ -580,7 +577,7 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
         LatLng pos = new LatLng(mAircraftLat, mAircraftLng);
         float zoomlevel = (float) 18.0;
         CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(pos, zoomlevel);
-        gMap.moveCamera(cu);
+        aMap.moveCamera(cu);
 
     }
 
@@ -788,26 +785,7 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
 
     }
 
-    //@Override
-    public void onMapReady(AMap googleMap) {
-        if (gMap == null) {
-            gMap = googleMap;
-            initMapView();
-        }
-
-        LatLng shenzhen = new LatLng(62.5362, 12.9454);
-        gMap.addMarker(new MarkerOptions().position(shenzhen).title("Marker in Norway"));
-        gMap.moveCamera(CameraUpdateFactory.newLatLng(shenzhen));
-
-    }
-
-    //@Override
-    //public void onMapClick(com.amap.api.maps2d.model.LatLng latLng) {
-
-    //}
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-
+    private void debugLog(String log) {
+        Log.i("WP2.0", log);
     }
 }

@@ -137,10 +137,10 @@ public class WaypointV2ActionDialog extends DialogFragment implements ITriggerCa
     }
 
     private void initView() {
-        rvAddedAction.setLayoutManager(new LinearLayoutManager(getActivity()));
-        rvAddedAction.addItemDecoration(new DividerItemDecoration(getActivity(), LinearLayout.HORIZONTAL));
+        rvAddedAction.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvAddedAction.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayout.HORIZONTAL));
 
-        actionAdapter = new WaypointActionAdapter(getActivity(), new ArrayList<>());
+        actionAdapter = new WaypointActionAdapter(getContext(), new ArrayList<>());
         rvAddedAction.setAdapter(actionAdapter);
 
         ArrayAdapter<String> triggerAdapter = new ArrayAdapter(getActivity(),
