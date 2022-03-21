@@ -58,6 +58,7 @@ import dji.sdk.useraccount.UserAccountManager;
 import sq.rogue.rosettadrone.DJISimulatorApplication;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
+import sq.rogue.rosettadrone.autolanding.TestingActivity;
 import sq.rogue.rosettadrone.autolanding.VisualLanding;
 
 public class Waypoint1Activity extends FragmentActivity implements View.OnClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback {
@@ -268,6 +269,12 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         @Override
         public void onExecutionFinish(@Nullable final DJIError error) {
             setResultToToast("Execution finished: " + (error == null ? "Success!" : error.getDescription()));
+            if(visualLandOn) {
+                visualLandOn = false;
+                Intent intent = new Intent();
+                intent.setClass(Waypoint1Activity.this, TestingActivity.class);
+                startActivity(intent);
+            }
         }
     };
 
@@ -566,11 +573,6 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
                 setResultToToast("Mission Start: " + (error == null ? "Successfully" : error.getDescription()));
             }
         });
-
-        if (visualLandOn) {
-            VisualLanding visualLanding = new VisualLanding();
-            visualLanding.startVisualLanding();
-        }
     }
 
     private void stopWaypointMission() {

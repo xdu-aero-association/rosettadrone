@@ -85,15 +85,11 @@ public class TargetDetect implements Runnable {
          this.codecManager = codecManager;
     }
 
-    public TargetDetect(DJICodecManager codecManager, VisualLandingFlightControl visualLandingFlightControl) {
-        this.visualLandingFlightControl = visualLandingFlightControl;
-        this.codecManager = codecManager;
-    }
-
     public TargetDetect(TestingActivity testingActivity,int width, int height){
         this.videoWidth = width;
         this.videoHeight = height;
         this.testingActivity = testingActivity;
+        this.codecManager = testingActivity.codecManager;
     }
 
     public TargetDetect(DJICodecManager djiCodecManager, TestingActivity testingActivity){
@@ -103,156 +99,20 @@ public class TargetDetect implements Runnable {
         this.testingActivity = testingActivity;
     }
 
-    int cnt = 0;
     @Override
     public void run() {
         resizeW = 280;
         resizeH = 280 * videoHeight / videoWidth;
-//        while (true) {
-//            targetPointResultEvent.setPoint(getTargetPoint(testingActivity.yuv), targetRadius);
-//            EventBus.getDefault().postSticky(targetPointResultEvent);
-//            Log.d(TAG, "sendTargetPointResultEvent"+targetPointResultEvent.targetPoint);
-//        }
-
-        codecManager.enabledYuvData(true);
-        codecManager.setYuvDataCallback(new DJICodecManager.YuvDataCallback() {
-            @Override
-            public void onYuvDataReceived(MediaFormat mediaFormat, ByteBuffer byteBuffer, int dataSize, int i1, int i2) {
-                Log.d(TAG, "YUVDataReceivedStart");
-                yuv = new byte[dataSize];
-                byteBuffer.get(yuv);
-                //-------------------------------------
-                if(cnt % 10 == 0){
-                    cnt = 0;
-
-                    //-----------------------------
-                    timeS = System.currentTimeMillis();
-                    long time1 = timeS;
-
-                    Mat yuvFrame = new Mat(videoHeight+videoHeight/2, videoWidth, CvType.CV_8UC1);
-                    if(yuv == null){
-                        Log.d(TAG, "detectReturn");
-                    }
-                    yuvFrame.put(0, 0, yuv);
-                    if(yuvFrame == null || yuvFrame.empty()) {
-                        Log.d(TAG, "detectReturn2");
-                    }
-                    Log.d(TAG, "yuvFrame: "+(System.currentTimeMillis()-timeS));
-                    timeS = System.currentTimeMillis();
-
-                    Mat frameTemp = new Mat(videoHeight, videoWidth, CvType.CV_8UC3);
-
-                    //yuv 2 bgr
-                    cvtColor(yuvFrame, frameTemp, COLOR_YUV2RGB_I420);
-
-                    //resize
-                    Mat frameDealing = new Mat(resizeH, resizeW, CvType.CV_8UC4);
-                    resize(frameTemp, frameDealing, frameDealing.size(), 0, 0);
-                    Log.d(TAG, "resize: "+(System.currentTimeMillis()-timeS));
-                    timeS = System.currentTimeMillis();
-
-                    //RGB 2 gray
-                    cvtColor(frameDealing, frameDealing, COLOR_RGB2GRAY);
-                    Log.d(TAG, "rgb2gray: "+(System.currentTimeMillis()-timeS));
-                    timeS = System.currentTimeMillis();
-
-                    //gray 2 binary frame
-//        threshold(frameDealing, frameDealing, 200 ,250, THRESH_BINARY);   // ? enable threshold value for self-adaptation
-                    adaptiveThreshold(frameDealing, frameDealing, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 15, 20);
-                    Log.d(TAG, "binary: "+(System.currentTimeMillis()-timeS));
-                    timeS = System.currentTimeMillis();
-
-                    //get contours
-                    findContours(frameDealing, contours, new Mat(), RETR_LIST, CHAIN_APPROX_NONE);
-
-                    //get the contours index
-                    int targetIndex = 0;
-                    if(contours.size()>0) {
-                        MatOfPoint target = contours.get(0);
-                        double targetArea = contourArea(target);
-                        double area, ratio, w, h;
-                        RotatedRect rect;
-
-                        for(int i=0; i<contours.size(); i ++) {
-
-                            MatOfPoint temp = contours.get(i);
-
-                            //area judge
-                            area = contourArea(temp);
-                            if(area < targetArea)
-                                continue;
-
-                            //transfer
-                            MatOfPoint2f temp2 = new MatOfPoint2f();
-                            temp.convertTo(temp2, CvType.CV_32F);
-
-                            //rect, w & h ratio judgement
-                            rect = minAreaRect(temp2);
-                            w = rect.size.width;
-                            h = rect.size.height;
-                            if(w!=0 && h!=0) {
-                                ratio = w/h;
-                            }else
-                                continue;
-
-                            if(Math.abs(ratio-1) < 0.1) {
-                                targetArea = area;
-                                targetIndex = i;
-                            }
-                        }
-                    }
-                    Log.d(TAG, "getIndex: "+(System.currentTimeMillis()-timeS));
-                    timeS = System.currentTimeMillis();
-
-                    //get center
-                    Moments Moments = moments(contours.get(targetIndex));
-                    PointF tp = new PointF((float) (Moments.m10 / Moments.m00)/resizeW, (float) (Moments.m01 / Moments.m00)/resizeH);
-
-                    EventBus.getDefault().postSticky(new TargetPointResultEvent(tp));
-
-                    Log.d(TAG, "sendTargetPointResultEvent: "+targetPointResultEvent.targetPoint);
-                    Log.d(TAG, "theDetectedPointIs: "+tp);
-                    Log.d(TAG, "detectionDuration: "+(System.currentTimeMillis()-time1));
-                }
-                cnt ++;
-                //-------------------------------------
+        while (true) {
+            if(testingActivity.yuv != null) {
+                targetPointResultEvent.setPoint(getTargetPoint(testingActivity.yuv), targetRadius);
+                EventBus.getDefault().postSticky(targetPointResultEvent);
+                Log.d(TAG, "sendTargetPointResultEvent" + targetPointResultEvent.targetPoint);
             }
-        });
+        }
     }
 
     //-------------------------Target Detection-------------------------
-    //in invoked order
-
-//    public synchronized PointF getFlyPoint(){
-//        long time1 = System.currentTimeMillis();
-//        currentCenter = getTargetPoint();
-////        Log.d(TAG, "theCurrentCenterIs:");
-//
-//        if(currentCenter == null) {
-//            return null;
-//        }
-////        int frameW = frame.width();
-////        int frameH = frame.height();
-//        double x = currentCenter.x/videoWidth;
-//        double y = currentCenter.y/videoHeight;
-//
-//        //whether the point is in center
-//        if( (Math.abs(videoWidth - currentCenter.x) / videoWidth) < POINT_ERROR
-//            && (Math.abs(videoHeight - currentCenter.y) / videoHeight) < POINT_ERROR) {
-//            isTargetPointAtCenter = true;
-//            EventBus.getDefault().postSticky(new TargetAtCenterEvent());
-//        }
-//
-//        float xF = ((float) x);
-//        float yF = ((float) y);
-//        PointF point = new PointF(xF, yF);
-//
-////        Log.d(TAG, "thePointIs: " + point);
-//        long time2 = System.currentTimeMillis();
-//        timeDuration = time2 -time1;
-//        Log.d(TAG, "WHOLEProcessDuration: "+timeDuration);
-//        return point;
-//    }
 
     long timeS = 0;
     protected synchronized PointF getTargetPoint(byte[] yuvData){
@@ -296,6 +156,7 @@ public class TargetDetect implements Runnable {
         timeS = System.currentTimeMillis();
 
         //get contours
+        contours.clear();
         findContours(frameDealing, contours, new Mat(), RETR_LIST, CHAIN_APPROX_NONE);
 
          //get the contours index
@@ -331,7 +192,7 @@ public class TargetDetect implements Runnable {
                  }
              }
          }
-        Log.d(TAG, "getIndex: "+(System.currentTimeMillis()-timeS));
+        Log.d(TAG, "getIndex: "+(System.currentTimeMillis()-timeS)+" contours size: " +contours.size());
         timeS = System.currentTimeMillis();
 
         //get center

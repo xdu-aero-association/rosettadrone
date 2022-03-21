@@ -94,63 +94,10 @@
                 android:layout_marginTop="0dp"
                 android:text="v" />
 
-            <LinearLayout
-                android:layout_width="220dp"
-                android:layout_height="110dp"
-                android:id="@+id/testingLayout5"
-                android:layout_toRightOf="@id/multiTest1Btn"
-                android:orientation="vertical">
-
-<!--                <EditText-->
-<!--                    android:layout_width="220dp"-->
-<!--                    android:layout_height="35dp"-->
-<!--                    android:id="@+id/latitudeET"-->
-<!--                    android:hint="latitude"-->
-<!--                    android:inputType="numberDecimal|numberSigned"/>-->
-
-<!--                <EditText-->
-<!--                    android:layout_width="220dp"-->
-<!--                    android:layout_height="35dp"-->
-<!--                    android:id="@+id/longitudeET"-->
-<!--                    android:hint="longitude"-->
-<!--                    android:inputType="numberDecimal|numberSigned"/>-->
-
-<!--                <EditText-->
-<!--                    android:layout_width="220dp"-->
-<!--                    android:layout_height="35dp"-->
-<!--                    android:id="@+id/altitudeET"-->
-<!--                    android:hint="altitude"-->
-<!--                    android:inputType="numberDecimal|numberSigned"/>-->
-
-                <!-- -->
-                <EditText
-                    android:layout_width="220dp"
-                    android:layout_height="38dp"
-                    android:id="@+id/pidPET"
-                    android:hint="p"
-                    android:inputType="numberDecimal|numberSigned"/>
-
-                <EditText
-                    android:layout_width="220dp"
-                    android:layout_height="38dp"
-                    android:id="@+id/pidIET"
-                    android:hint="i"
-                    android:inputType="numberDecimal|numberSigned"/>
-
-                <EditText
-                    android:layout_width="220dp"
-                    android:layout_height="38dp"
-                    android:id="@+id/pidDET"
-                    android:hint="d"
-                    android:inputType="numberDecimal|numberSigned"/>
-
-            </LinearLayout>
-
             <ImageView
                 android:id="@+id/matshowV"
                 android:layout_width="220dp"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/testingLayout5"/>
+                android:layout_height="wrap_content" />
 
         </RelativeLayout>
 
