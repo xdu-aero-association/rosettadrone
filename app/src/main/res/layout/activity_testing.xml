@@ -99,6 +99,23 @@
                 android:layout_width="220dp"
                 android:layout_height="wrap_content" />
 
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:id="@+id/radio_group_test"
+                android:layout_toRightOf="@id/multiTest1Btn"
+                android:layout_gravity="center_horizontal">
+
+                <RadioButton
+                    android:id="@+id/finishVisualLand_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="5pt"
+                    android:checked="true"
+                    android:text="VisualLand" />
+            </RadioGroup>
+
         </RelativeLayout>
 
     </LinearLayout>

@@ -36,6 +36,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 
 import org.greenrobot.eventbus.EventBus;
 import org.opencv.android.BaseLoaderCallback;
@@ -71,6 +72,7 @@ import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
+import okhttp3.internal.Util;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 import sq.rogue.rosettadrone.settings.Tools;
@@ -90,9 +92,6 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private ImageView imageView;
     protected TextureView videoSurface = null;
     private SurfaceView drawingSurface = null;
-    private EditText pidPET;
-    private EditText pidIET;
-    private EditText pidDET;
 
 
     protected VideoFeeder.VideoDataListener videoDataListener = null;
@@ -247,12 +246,12 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.targetAndFlightTestBtn:{
-                FCTestThread = new Thread(new VisualLandingFlightControl(true, codecManager));
+                FCTestThread = new Thread(new VisualLandingFlightControl());
                 FCTestThread.start();
                 break;
             }
             case R.id.fullStartTestBtn:{
-                visualLanding = new VisualLanding(codecManager);
+                visualLanding = new VisualLanding();
                 visualLanding.startVisualLanding();
                 break;
             }
@@ -283,12 +282,6 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
             case R.id.multiTest2Btn:{
                 break;
             }
-            case R.id.multiTest3Btn:{
-                targetDetect = new TargetDetect(codecManager, this);
-                targetDetection = new Thread(targetDetect);
-                targetDetection.start();
-                break;
-            }
             default: break;
         }
     }
@@ -297,6 +290,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         if(codecManager == null) {
             codecManager = new DJICodecManager(this, surface, width, height);
+            startVisualLand();
         }
     }
 
@@ -336,14 +330,12 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private void yuvTest(){
         videoHeight = codecManager.getVideoHeight();
         videoWidth = codecManager.getVideoWidth();
-        resizeW = 200;
-        resizeH = 200 * videoHeight / videoWidth;
 
         codecManager.enabledYuvData(true);
         codecManager.setYuvDataCallback(new DJICodecManager.YuvDataCallback() {
             @Override
             public void onYuvDataReceived(MediaFormat mediaFormat, ByteBuffer byteBuffer, int i, int i1, int i2) {
-                if(cnt % 5 == 0) {
+                if(cnt % 15 == 0) {
                     yuv = new byte[i];
                     byteBuffer.get(yuv);
                     cnt = 0;
@@ -351,6 +343,30 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 cnt ++;
             }
         });
+    }
+
+    public void startVisualLand() {
+
+//        visualLanding = new VisualLanding();
+
+        yuvTest();
+
+        GimbalRotateTask gimbalRotateTask = new GimbalRotateTask(GimbalTaskMode.ADJUST);
+        Timer timerGimbalRotateTask = new Timer();
+        timerGimbalRotateTask.schedule(gimbalRotateTask, 0, 100);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        targetDetect = new TargetDetect(this, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+        targetDetection = new Thread(targetDetect);
+        targetDetection.start();
+
+        FCTestThread = new Thread(new VisualLandingFlightControl(targetDetect));
+        FCTestThread.start();
     }
 
     @Override

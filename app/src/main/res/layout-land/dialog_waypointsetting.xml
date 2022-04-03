@@ -100,6 +100,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:id="@+id/actionAfterFinished"
+
             android:layout_gravity="center_horizontal">
 
             <RadioButton
@@ -135,6 +136,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="5pt"
+                android:checked="true"
                 android:text="VisualLand" />
 
         </RadioGroup>

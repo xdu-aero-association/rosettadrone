@@ -87,7 +87,7 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
     private WaypointMissionFinishedAction mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
     private WaypointMissionHeadingMode mHeadingMode = WaypointMissionHeadingMode.AUTO;
 
-    private boolean visualLandOn = false;
+    private boolean visualLandOn = true;
 
     @Override
     protected void onResume() {
@@ -270,7 +270,6 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         public void onExecutionFinish(@Nullable final DJIError error) {
             setResultToToast("Execution finished: " + (error == null ? "Success!" : error.getDescription()));
             if(visualLandOn) {
-                visualLandOn = false;
                 Intent intent = new Intent();
                 intent.setClass(Waypoint1Activity.this, TestingActivity.class);
                 startActivity(intent);
@@ -420,7 +419,6 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         RadioGroup heading_RG = (RadioGroup) wayPointSettings.findViewById(R.id.heading);
 
         speed_RG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (checkedId == R.id.lowSpeed) {
@@ -439,6 +437,7 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 Log.d(TAG, "Select finish action");
+                visualLandOn = false;
                 if (checkedId == R.id.finishNone) {
                     mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
                 } else if (checkedId == R.id.finishGoHome) {

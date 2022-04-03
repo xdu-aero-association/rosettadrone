@@ -45,28 +45,18 @@ public class VisualLandingFlightControl implements Runnable{
     protected DJICodecManager djiCodecManager;
     private boolean startLanding = false;
 
-    VisualLandingFlightControl(boolean testMode, DJICodecManager djiCodecManager) {
-        this.djiCodecManager = djiCodecManager;
+    public VisualLandingFlightControl(TargetDetect targetDetect) {
+        this.targetDetect = targetDetect;
     }
 
-    VisualLandingFlightControl(DJICodecManager djiCodecManager) {
-        this.djiCodecManager = djiCodecManager;
+    public VisualLandingFlightControl() {
+
     }
 
     @Override
     public void run() {
         //enable virtual stick control
         initFlightControl();
-
-        //gimbal rotate
-//        gimbalRotateTask = new GimbalRotateTask(GimbalTaskMode.ADJUST);
-//        timerGimbalRotation = new Timer();
-//        timerGimbalRotation.schedule(gimbalRotateTask, 0, 100);
-
-        //build target detection task
-//        targetDetect = new TargetDetect(djiCodecManager, this);
-//        targetDetectionThread = new Thread(targetDetect);
-//        targetDetectionThread.start();
 
         //EventBus register
         EventBus.getDefault().register(this);
@@ -240,7 +230,7 @@ public class VisualLandingFlightControl implements Runnable{
         targetPoint = null;
         targetPoint = targetPointResultEvent.targetPoint;
         Log.d(TAG, "dataPointReceived");
-        setFlightControlData();
+        setFlightControlData(targetPoint);
     }
 
     float errorXI = 0;
@@ -253,16 +243,16 @@ public class VisualLandingFlightControl implements Runnable{
 
     //0.1  0.01-0.02  0
     float pitchP = 0.4f;
-    float pitchI = -0.0001f;
-    float pitchD = 0.05f;
+    float pitchI = 0.1f;
+    float pitchD = 0.2f;
 
-    float rollP = -0.4f;
-    float rollI = 0.0001f;
-    float rollD = 0.05f;
+    float rollP = 0.4f;     //-
+    float rollI = 0.1f;
+    float rollD = 0.2f;
 
     float yawAngle = 0;
 
-    public void setFlightControlData() {
+    public synchronized void setFlightControlData(PointF targetPoint) {
 
 //        targetPoint = targetDetect.getFlyPoint();
 //        Log.d(TAG, "setDataUSingPoint: "+targetPoint);
@@ -273,8 +263,13 @@ public class VisualLandingFlightControl implements Runnable{
 
         if(targetPoint != null) {
 
-            float errorXCur = targetPoint.x - 0.5f;
-            float errorYCur = targetPoint.y - 0.5f;
+            //target point is the measured point, and the PointF(0.5, 0.5) is the real target point
+//            float errorXCur = targetPoint.x - 0.5f;
+            float errorXCur = 0.5f - targetPoint.x;
+
+//            float errorYCur = targetPoint.y - 0.5f;
+            float errorYCur = 0.5f - targetPoint.y;
+
             float errorAngleCur = (float)Math.toDegrees(Math.atan(Math.abs(errorYCur/errorXCur)));
             errorXI += errorXCur;
             errorYI += errorYCur;
@@ -292,7 +287,9 @@ public class VisualLandingFlightControl implements Runnable{
             //specific
 
             //roll angle range in (-0.4, 0.4)
-            rollAngle = rollP*errorYCur+rollI*errorYI+rollD*(errorYCur-errorYPre);
+//            rollAngle = rollP*errorYCur+rollI*errorYI+rollD*(errorYCur-errorYPre);
+            rollAngle = -(rollP*errorYCur+rollI*errorYI+rollD*(errorYCur-errorYPre));
+
 
             //--------------------vertical--------------------
             //specific
@@ -301,6 +298,9 @@ public class VisualLandingFlightControl implements Runnable{
                     .getState().getAircraftLocation().getAltitude();
             altitudeI += altitudeCur;
 
+            if(altitudeCur > 15) {
+                verticalThrottle = 0.5f;
+            }
             //--------------------land--------------------
             if (Math.abs(errorXCur) < 0.05 && Math.abs(errorYCur) < 0.05) {
                 if(altitudeCur < 4) {
@@ -326,7 +326,8 @@ public class VisualLandingFlightControl implements Runnable{
                         });
                     }
                 }else{
-                    verticalThrottle = 0.01f;
+                    verticalThrottle = 2.0f;
+                    //m/s  (0.01f
                 }
             }
 
@@ -337,7 +338,7 @@ public class VisualLandingFlightControl implements Runnable{
         }
 
         if(!startLanding) {
-            flightControlData = new FlightControlData(pitch, rollAngle, yawAngle, verticalThrottle);
+            flightControlData = new FlightControlData(2*pitch, 2*rollAngle, yawAngle, verticalThrottle);
         }
     }
 
@@ -348,11 +349,15 @@ public class VisualLandingFlightControl implements Runnable{
 
 //            setFlightControlData();
 
+            setFlightControlData(targetPoint);
+
             Log.d(TAG, "\nTarget point: " + targetPoint + "\n"
                     + " pitch: " + flightControlData.getPitch()
                     + " roll: " + flightControlData.getRoll()
                     + " yaw: " + flightControlData.getYaw()
             );
+
+
 
             ((Aircraft) RDApplication.getProductInstance()).getFlightController().
                     sendVirtualStickFlightControlData(flightControlData, new CommonCallbacks.CompletionCallback() {

@@ -24,14 +24,8 @@ public class VisualLanding {
     GimbalRotateTask gimbalRotateTask;
     Timer timerGimbalRotateTask;
 
-    public VisualLanding(DJICodecManager djiCodecManager) {
-        this.djiCodecManager = djiCodecManager;
-        targetDetect = new TargetDetect(djiCodecManager);
-        visualLandingFlightControl = new VisualLandingFlightControl(djiCodecManager);
-    }
-
-    public VisualLanding() {
-
+    public VisualLanding( ) {
+//        visualLandingFlightControl = new VisualLandingFlightControl();
     }
 
     public void startVisualLanding() {
@@ -54,7 +48,7 @@ public class VisualLanding {
             return true;
         }else {
             if(((Aircraft)RDApplication.getProductInstance()).getFlightController()
-                    .getState().getAircraftLocation().getAltitude() < 8) {
+                    .getState().getAircraftLocation().getAltitude() < 10) {
                 visualLandingFlightControl.sendFlightUpCommand();
                 visualLandingFlightControl.endCheckFlight();
                 Log.d(TAG, "sendFlightUpCommand");
@@ -68,7 +62,7 @@ public class VisualLanding {
         return false;
     }
 
-    private void startGimbalTask(GimbalTaskMode gimbalTaskMode) {
+    protected void startGimbalTask(GimbalTaskMode gimbalTaskMode) {
         gimbalRotateTask = new GimbalRotateTask(gimbalTaskMode);
         timerGimbalRotateTask = new Timer();
         timerGimbalRotateTask.schedule(gimbalRotateTask, 0, 100);
