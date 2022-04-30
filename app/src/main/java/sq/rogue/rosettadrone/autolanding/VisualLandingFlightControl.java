@@ -182,47 +182,6 @@ public class VisualLandingFlightControl implements Runnable{
         timerFlightDataTask.schedule(new FlightControlDataTask(), 0, 200);
     }
 
-//    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-//    public void end(TargetAtCenterEvent targetAtCenterEvent) {
-//
-//        Log.d(TAG, "receiveTargetAtCenterEvent");
-//        endVisualLandingFlightControl();
-//
-//        //land
-//        ((Aircraft)RDApplication.getProductInstance()).getFlightController().startLanding(new CommonCallbacks.CompletionCallback() {
-//            @Override
-//            public void onResult(DJIError djiError) {
-//                if(djiError != null) {
-//                    Log.d(TAG, "Start landing failed, error: " + djiError.getDescription());
-//                }
-//            }
-//        });
-//
-//        ((Aircraft)RDApplication.getProductInstance()).getFlightController().setStateCallback(new FlightControllerState.Callback() {
-//            @Override
-//            public void onUpdate(@NonNull FlightControllerState flightControllerState) {
-//                if (flightControllerState.isLandingConfirmationNeeded()) {
-//                    ((Aircraft)RDApplication.getProductInstance()).getFlightController().confirmLanding(new CommonCallbacks.CompletionCallback() {
-//                        @Override
-//                        public void onResult(DJIError djiError) {
-//                            if(djiError != null) {
-//                                Log.d(TAG, "Confirm landing failed, error: " + djiError.getDescription());
-//                            }
-//                        }
-//                    });
-//                }
-//            }
-//        });
-//
-////        //disable virtual stick control
-////        flightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
-////            @Override
-////            public void onResult(DJIError djiError) {
-////
-////            }
-////        });
-//    }
-
     //-------------------------Flight Control-------------------------
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     public void flightControl(TargetPointResultEvent targetPointResultEvent) {
@@ -243,15 +202,15 @@ public class VisualLandingFlightControl implements Runnable{
 
     //0.1  0.01-0.02  0
     float pitchP = 0.4f;
-    float pitchI = 0.1f;
-    float pitchD = 0.2f;
+    float pitchI = 0.001f;
+    float pitchD = 0.05f;
 
     float rollP = 0.4f;     //-
-    float rollI = 0.1f;
-    float rollD = 0.2f;
+    float rollI = 0.001f;
+    float rollD = 0.05f;
 
     float yawAngle = 0;
-
+    boolean adjust = false;
     public synchronized void setFlightControlData(PointF targetPoint) {
 
 //        targetPoint = targetDetect.getFlyPoint();
@@ -281,14 +240,14 @@ public class VisualLandingFlightControl implements Runnable{
             //specific
 
             //pitch angle: (0.00001, 0.001)
-            pitch = pitchP*errorXCur+pitchI*errorXI+pitchD*(errorXCur-errorXPre);
+            pitch = -(pitchP*errorXCur+pitchI*errorXI+pitchD*(errorXCur-errorXPre));
 
             //--------------------roll--------------------
             //specific
 
             //roll angle range in (-0.4, 0.4)
 //            rollAngle = rollP*errorYCur+rollI*errorYI+rollD*(errorYCur-errorYPre);
-            rollAngle = -(rollP*errorYCur+rollI*errorYI+rollD*(errorYCur-errorYPre));
+            rollAngle = (rollP*errorYCur+rollI*errorYI+rollD*(errorYCur-errorYPre));
 
 
             //--------------------vertical--------------------
@@ -298,12 +257,20 @@ public class VisualLandingFlightControl implements Runnable{
                     .getState().getAircraftLocation().getAltitude();
             altitudeI += altitudeCur;
 
-            if(altitudeCur > 15) {
-                verticalThrottle = 0.5f;
-            }
             //--------------------land--------------------
-            if (Math.abs(errorXCur) < 0.05 && Math.abs(errorYCur) < 0.05) {
-                if(altitudeCur < 4) {
+
+            //--------------------second adjust--------------------
+            boolean center = Math.abs(errorXCur) < 0.05 && Math.abs(errorYCur) < 0.05;
+            if(altitudeCur > 15) {
+                verticalThrottle = 2.0f;
+            }else if(altitudeCur > 4) {
+                if(center) {
+                    verticalThrottle = 2.0f;
+                }else {
+                    verticalThrottle = 1.0f;
+                }
+            }else if(altitudeCur < 4) {
+                if(center) {
                     startLanding = true;
 
                     flightController.startLanding(new CommonCallbacks.CompletionCallback() {
@@ -325,9 +292,6 @@ public class VisualLandingFlightControl implements Runnable{
                             }
                         });
                     }
-                }else{
-                    verticalThrottle = 2.0f;
-                    //m/s  (0.01f
                 }
             }
 
@@ -338,7 +302,7 @@ public class VisualLandingFlightControl implements Runnable{
         }
 
         if(!startLanding) {
-            flightControlData = new FlightControlData(2*pitch, 2*rollAngle, yawAngle, verticalThrottle);
+            flightControlData = new FlightControlData(pitch, rollAngle, yawAngle, -verticalThrottle/4);
         }
     }
 
@@ -347,8 +311,6 @@ public class VisualLandingFlightControl implements Runnable{
         @Override
         public void run() {
 
-//            setFlightControlData();
-
             setFlightControlData(targetPoint);
 
             Log.d(TAG, "\nTarget point: " + targetPoint + "\n"
@@ -356,8 +318,6 @@ public class VisualLandingFlightControl implements Runnable{
                     + " roll: " + flightControlData.getRoll()
                     + " yaw: " + flightControlData.getYaw()
             );
-
-
 
             ((Aircraft) RDApplication.getProductInstance()).getFlightController().
                     sendVirtualStickFlightControlData(flightControlData, new CommonCallbacks.CompletionCallback() {

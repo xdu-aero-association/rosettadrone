@@ -65,15 +65,17 @@ public class DrawingLandingPointThread extends Thread{
 //                Log.d(TAG, "twoDrawingDuration: " + timeDuration);
 
                 canvas = drawingHolder.lockCanvas();
-                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-                if (targetPoint != null) {
-                    canvas.drawCircle(targetPoint.x * width, targetPoint.y * height, 50f, paint);
-                    time2 = System.currentTimeMillis();
-                    timeDuration = time2 - time1;
+                if(canvas != null) {
+                    canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+                    if (targetPoint != null) {
+                        canvas.drawCircle(targetPoint.x * width, targetPoint.y * height, 50f, paint);
+                        time2 = System.currentTimeMillis();
+                        timeDuration = time2 - time1;
 //                    Log.d(TAG, "DrawThePoint" + " " + targetPoint.x + " " + targetPoint.y
 //                            + "\n" + " ProcessingDuration: " + timeDuration);
+                    }
+                    drawingHolder.unlockCanvasAndPost(canvas);
                 }
-                drawingHolder.unlockCanvasAndPost(canvas);
 //            }
         }
     }

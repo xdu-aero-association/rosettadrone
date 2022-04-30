@@ -231,10 +231,12 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     public void onClick(View v){
         switch (v.getId()) {
             case R.id.targetAndGimbalTestBtn:{
+                //start to receive yuv data
                 yuvTest();
                 break;
             }
             case R.id.targetTestBtn:{
+                //show a bitmap while detecting
                 keep = true;
                 testTargetDetect();
                 break;
@@ -316,7 +318,6 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     //---------------test method-------------
 
     private void testTargetDetect() {
-
         imageView.setVisibility(View.VISIBLE);
         Mat mat1 = targetDetect.yuvTest();
         bitmap = Bitmap.createBitmap(mat1.width(), mat1.height(), Bitmap.Config.ARGB_8888);

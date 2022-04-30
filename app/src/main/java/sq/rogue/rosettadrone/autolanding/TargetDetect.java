@@ -180,13 +180,19 @@ public class TargetDetect implements Runnable {
         Moments Moments = moments(contours.get(targetIndex));
         targetPoint = new PointF((float) (Moments.m10 / Moments.m00)/resizeW, (float) (Moments.m01 / Moments.m00)/resizeH);
 
-        //
+        //a simple way to replace the kalman filter
         if(preTargetPoint != null) {
-            if(Math.abs(targetPoint.x - preTargetPoint.x) > 0.45f || Math.abs(targetPoint.y - preTargetPoint.y) > 0.4f) {
-                targetPoint.x = (float) (preTargetPoint.x * 0.7 + targetPoint.x * 0.3);
-                targetPoint.y = (float) (preTargetPoint.y * 0.7 + targetPoint.y * 0.3);
+            if(Math.abs(targetPoint.x - preTargetPoint.x) > 0.65f || Math.abs(targetPoint.y - preTargetPoint.y) > 0.65f) {
+//                if (Math.abs(targetPoint.x - preTargetPoint.x) > 0.8f || Math.abs(targetPoint.y - preTargetPoint.y) > 0.8f) {
+//                    targetPoint = preTargetPoint;
+//                } else {
+//                    targetPoint.x = (float) (preTargetPoint.x * 0.7 + targetPoint.x * 0.3);
+//                    targetPoint.y = (float) (preTargetPoint.y * 0.7 + targetPoint.y * 0.3);
+//                }
+                targetPoint = preTargetPoint;
             }
         }
+        preTargetPoint = targetPoint;
 
         //kalman
 //        kalmanWork();
@@ -194,14 +200,11 @@ public class TargetDetect implements Runnable {
         Log.d(TAG, "theDetectedPointIs: "+targetPoint);
         Log.d(TAG, "detectionDuration:"+(System.currentTimeMillis()-time1));
 
-        preTargetPoint = targetPoint;
-
         return targetPoint;
     }
 
     private void kalmanInit() {
 
-        //init
         kf = new KalmanFilter(2, 2, 0, CV_32F);
 
         Log.d(TAG, "CHECKING KalmanFilter Matrix: " +
@@ -261,7 +264,7 @@ public class TargetDetect implements Runnable {
 //        processionNoiseCov: 2x2
 //        measurementNoiseCov: 2x2
 //        errorCovPost: 2x2
-        transitionMatrix = Mat.eye(2, 2, CV_32F);
+        transitionMatrix = Mat.ones(2, 2, CV_32F);
         kf.set_transitionMatrix(transitionMatrix);
 
         measurementMatrix = Mat.eye(2, 2, CV_32F);
@@ -329,10 +332,9 @@ public class TargetDetect implements Runnable {
     }
 
     //-------------------------Get Video Source-------------------------
-
-    //test for yuv
     public synchronized Mat yuvTest(){
-
+        //test for yuv
+        //return a bitmap for displaying
         resizeW = 200;
         resizeH = 200 * videoHeight / videoWidth;
 
