@@ -1,80 +1,82 @@
 package sq.rogue.rosettadrone.autolanding;
 
 import android.util.Log;
-import android.util.TimeUtils;
-
-import androidx.annotation.NonNull;
 
 import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
-import dji.common.error.DJIError;
-import dji.common.flightcontroller.FlightControllerState;
-import dji.common.gimbal.GimbalState;
-import dji.common.util.CommonCallbacks;
 import dji.sdk.codec.DJICodecManager;
-import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
 import sq.rogue.rosettadrone.RDApplication;
-import sq.rogue.rosettadrone.settings.Tools;
 
-public class VisualLanding implements DetectionCallback{
+//pid param opposite
+//coordinate system relative
+//exit → time, is
+//straight?  coordinate
+//gimbal
+
+public class VisualLanding {
 
     private static final String TAG = "Visual landing";
 
+    protected DJICodecManager djiCodecManager;
     private TargetDetect targetDetect;
-    private Thread targetDetectionThread;
-    boolean targetInVision = false;
+    protected VisualLandingFlightControl visualLandingFlightControl;
     GimbalRotateTask gimbalRotateTask;
     Timer timerGimbalRotateTask;
 
-    public VisualLanding() {
-//        targetDetect = new TargetDetect();
+    public VisualLanding( ) {
+//        visualLandingFlightControl = new VisualLandingFlightControl();
     }
 
     public void startVisualLanding() {
 
         startGimbalTask(GimbalTaskMode.ADJUST);
 
-        if(checkPrecisionLanding()){
-            Thread visualLandingFlightControlThread = new Thread(new VisualLandingFlightControl());
+        if(checkVisualLanding()){
+            Thread visualLandingFlightControlThread = new Thread(visualLandingFlightControl);
             visualLandingFlightControlThread.start();
+            Log.d(TAG, "visualLandingFlightControl start");
         }else {
             Log.d(TAG, "Start visual landing failed, because the target is not in vision.");
         }
     }
 
-    private boolean checkPrecisionLanding() {
+    private boolean checkVisualLanding() {
 
+        Log.d(TAG, "check visual landing");
         if(targetDetect.isTargetInVision()) {
             return true;
         }else {
-            VisualLandingFlightControl visualLandingFlightControl =
-                    new VisualLandingFlightControl();
-            visualLandingFlightControl.sendFlightUpCommand();
+            if(((Aircraft)RDApplication.getProductInstance()).getFlightController()
+                    .getState().getAircraftLocation().getAltitude() < 10) {
+                visualLandingFlightControl.sendFlightUpCommand();
+                visualLandingFlightControl.endCheckFlight();
+                Log.d(TAG, "sendFlightUpCommand");
+            }
 
             if(targetDetect.isTargetInVision()) {
+                visualLandingFlightControl.endCheckFlight();
                 return true;
             }
         }
         return false;
     }
 
-    @Override
-    public void detectionCallback(boolean targetDetected) {
-        targetInVision = targetDetected;
-    }
-
-    private void startGimbalTask(GimbalTaskMode gimbalTaskMode) {
-        if(timerGimbalRotateTask != null) {
-            try{
-                TimeUnit.SECONDS.sleep(30);
-            }catch (Exception e) {
-                Log.d(TAG, "Gimbal rotation task running.");
-            }
-        }
+    protected void startGimbalTask(GimbalTaskMode gimbalTaskMode) {
         gimbalRotateTask = new GimbalRotateTask(gimbalTaskMode);
         timerGimbalRotateTask = new Timer();
         timerGimbalRotateTask.schedule(gimbalRotateTask, 0, 100);
+    }
+
+    private void endGimbalTask() {
+        if(gimbalRotateTask != null) {
+            gimbalRotateTask.cancel();
+        }
+        if(timerGimbalRotateTask != null) {
+            timerGimbalRotateTask.cancel();
+            timerGimbalRotateTask.purge();
+        }
+        timerGimbalRotateTask = null;
+        gimbalRotateTask = null;
     }
 }

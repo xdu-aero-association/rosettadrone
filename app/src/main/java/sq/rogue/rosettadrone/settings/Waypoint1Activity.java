@@ -45,6 +45,7 @@ import dji.common.mission.waypoint.WaypointMissionFinishedAction;
 import dji.common.mission.waypoint.WaypointMissionFlightPathMode;
 import dji.common.mission.waypoint.WaypointMissionHeadingMode;
 import dji.common.mission.waypoint.WaypointMissionUploadEvent;
+import dji.common.mission.waypointv2.WaypointV2MissionTypes;
 import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.base.BaseProduct;
@@ -57,6 +58,8 @@ import dji.sdk.useraccount.UserAccountManager;
 import sq.rogue.rosettadrone.DJISimulatorApplication;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
+import sq.rogue.rosettadrone.autolanding.TestingActivity;
+import sq.rogue.rosettadrone.autolanding.VisualLanding;
 
 public class Waypoint1Activity extends FragmentActivity implements View.OnClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback {
 
@@ -83,6 +86,8 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
     private WaypointMissionOperator instance;
     private WaypointMissionFinishedAction mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
     private WaypointMissionHeadingMode mHeadingMode = WaypointMissionHeadingMode.AUTO;
+
+    private boolean visualLandOn = true;
 
     @Override
     protected void onResume() {
@@ -264,6 +269,11 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         @Override
         public void onExecutionFinish(@Nullable final DJIError error) {
             setResultToToast("Execution finished: " + (error == null ? "Success!" : error.getDescription()));
+            if(visualLandOn) {
+                Intent intent = new Intent();
+                intent.setClass(Waypoint1Activity.this, TestingActivity.class);
+                startActivity(intent);
+            }
         }
     };
 
@@ -409,7 +419,6 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         RadioGroup heading_RG = (RadioGroup) wayPointSettings.findViewById(R.id.heading);
 
         speed_RG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (checkedId == R.id.lowSpeed) {
@@ -428,6 +437,7 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 Log.d(TAG, "Select finish action");
+                visualLandOn = false;
                 if (checkedId == R.id.finishNone) {
                     mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
                 } else if (checkedId == R.id.finishGoHome) {
@@ -436,6 +446,9 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
                     mFinishedAction = WaypointMissionFinishedAction.AUTO_LAND;
                 } else if (checkedId == R.id.finishToFirst) {
                     mFinishedAction = WaypointMissionFinishedAction.GO_FIRST_WAYPOINT;
+                } else if (checkedId == R.id.finishVisualLand) {
+                    mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
+                    visualLandOn = true;
                 }
             }
         });

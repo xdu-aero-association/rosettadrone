@@ -24,21 +24,21 @@
                 android:id="@+id/targetAndGimbalTestBtn"
                 android:layout_width="90dp"
                 android:layout_height="wrap_content"
-                android:text="target&amp;gimbal" />
+                android:text="yuvmode" />
 
             <Button
                 android:id="@+id/targetTestBtn"
                 android:layout_width="90dp"
                 android:layout_height="wrap_content"
                 android:layout_toRightOf="@id/targetAndGimbalTestBtn"
-                android:text="target test" />
+                android:text="get pic" />
 
             <Button
                 android:id="@+id/flightTestBtn"
                 android:layout_width="90dp"
-                android:layout_height="wrap_content"
+                android:layout_height="55dp"
                 android:layout_toRightOf="@+id/targetTestBtn"
-                android:text="flight test" />
+                android:text="yuv detect" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -62,7 +62,7 @@
             <Button
                 android:id="@+id/exitTestBtn"
                 android:layout_width="90dp"
-                android:layout_height="wrap_content"
+                android:layout_height="55dp"
                 android:layout_toRightOf="@+id/fullStartTestBtn"
                 android:text="exit!" />
         </RelativeLayout>
@@ -76,7 +76,7 @@
                 android:id="@+id/multiTest1Btn"
                 android:layout_width="40dp"
                 android:layout_height="35dp"
-                android:text="1" />
+                android:text="!!" />
 
             <Button
                 android:id="@+id/multiTest2Btn"
@@ -84,61 +84,64 @@
                 android:layout_height="35dp"
                 android:layout_below="@+id/multiTest1Btn"
                 android:layout_marginTop="0dp"
-                android:text="FC" />
+                android:text="r" />
 
-            <LinearLayout
-                android:layout_width="220dp"
-                android:layout_height="110dp"
-                android:id="@+id/testingLayout5"
-                android:layout_toRightOf="@id/multiTest1Btn"
-                android:orientation="vertical">
-
-                <EditText
-                    android:layout_width="220dp"
-                    android:layout_height="35dp"
-                    android:id="@+id/latitudeET"
-                    android:hint="latitude"
-                    android:inputType="numberDecimal|numberSigned"/>
-
-                <EditText
-                    android:layout_width="220dp"
-                    android:layout_height="35dp"
-                    android:id="@+id/longitudeET"
-                    android:hint="longitude"
-                    android:inputType="numberDecimal|numberSigned"/>
-
-                <EditText
-                    android:layout_width="220dp"
-                    android:layout_height="35dp"
-                    android:id="@+id/altitudeET"
-                    android:hint="altitude"
-                    android:inputType="numberDecimal|numberSigned"/>
-
-            </LinearLayout>
+            <Button
+                android:id="@+id/multiTest3Btn"
+                android:layout_width="40dp"
+                android:layout_height="35dp"
+                android:layout_below="@+id/multiTest2Btn"
+                android:layout_marginTop="0dp"
+                android:text="v" />
 
             <ImageView
                 android:id="@+id/matshowV"
                 android:layout_width="220dp"
+                android:layout_height="wrap_content" />
+
+            <RadioGroup
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/testingLayout5"/>
+                android:orientation="horizontal"
+                android:id="@+id/radio_group_test"
+                android:layout_toRightOf="@id/multiTest1Btn"
+                android:layout_gravity="center_horizontal">
+
+                <RadioButton
+                    android:id="@+id/finishVisualLand_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="5pt"
+                    android:checked="true"
+                    android:text="VisualLand" />
+            </RadioGroup>
 
         </RelativeLayout>
 
-
-
     </LinearLayout>
-
 
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@id/testingLayout3">
 
-        <TextureView
-            android:id="@+id/videoPreviewerSurface"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <SurfaceView
+                android:id="@+id/drawingSurface"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            
+            <TextureView
+                android:id="@+id/videoPreviewerSurface"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center" />
+            
+        </FrameLayout>
+        
     </RelativeLayout>
 
 </RelativeLayout>

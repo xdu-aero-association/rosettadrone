@@ -1,22 +1,59 @@
 package sq.rogue.rosettadrone.autolanding;
 
+import static org.opencv.imgproc.Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C;
+import static org.opencv.imgproc.Imgproc.CHAIN_APPROX_NONE;
+import static org.opencv.imgproc.Imgproc.COLOR_RGB2GRAY;
+import static org.opencv.imgproc.Imgproc.COLOR_YUV2BGR;
+import static org.opencv.imgproc.Imgproc.COLOR_YUV2BGR_NV12;
+import static org.opencv.imgproc.Imgproc.COLOR_YUV2GRAY_420;
+import static org.opencv.imgproc.Imgproc.COLOR_YUV2RGB_I420;
+import static org.opencv.imgproc.Imgproc.RETR_LIST;
+import static org.opencv.imgproc.Imgproc.THRESH_BINARY_INV;
+import static org.opencv.imgproc.Imgproc.adaptiveThreshold;
+import static org.opencv.imgproc.Imgproc.contourArea;
+import static org.opencv.imgproc.Imgproc.cvtColor;
+import static org.opencv.imgproc.Imgproc.findContours;
+import static org.opencv.imgproc.Imgproc.minAreaRect;
+import static org.opencv.imgproc.Imgproc.moments;
+import static org.opencv.imgproc.Imgproc.resize;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.PixelFormat;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.graphics.YuvImage;
+import android.media.MediaFormat;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 
+import org.greenrobot.eventbus.EventBus;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.RotatedRect;
+import org.opencv.imgproc.Moments;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
@@ -28,17 +65,19 @@ import dji.common.flightcontroller.virtualstick.YawControlMode;
 import dji.common.product.Model;
 import dji.common.util.CommonCallbacks;
 import dji.lidar_map.my_point_3d.Point3D;
+import dji.midware.data.model.P3.Ta;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.camera.Camera;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
+import okhttp3.internal.Util;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 import sq.rogue.rosettadrone.settings.Tools;
 
-public class TestingActivity extends Activity implements TextureView.SurfaceTextureListener, View.OnClickListener {
+public class TestingActivity extends Activity implements TextureView.SurfaceTextureListener, SurfaceHolder.Callback, View.OnClickListener {
 
     private static final String TAG = "TestingActivity";
 
@@ -52,9 +91,8 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private Button multi2TestBtn;
     private ImageView imageView;
     protected TextureView videoSurface = null;
-    private EditText longitudeET;
-    private EditText latitudeET;
-    private EditText altitudeET;
+    private SurfaceView drawingSurface = null;
+
 
     protected VideoFeeder.VideoDataListener videoDataListener = null;
     protected VideoFeeder.VideoFeed videoFeed = null;
@@ -62,6 +100,13 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
 
     private FlightController flightController;
     private Thread FCTestThread = null;
+    private Thread targetDetection = null;
+    private TargetDetect targetDetect = null;
+    private DrawingLandingPointThread drawingLandingPointThread;
+    private Bitmap bitmap = null;
+    private Mat frame = null;
+    private boolean keep = false;
+    public byte[] yuv = null;
 
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -86,11 +131,10 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         initFlightControl();
         initUI();
 
-        Camera camera = RDApplication.getProductInstance().getCamera();
-
         //video read in 1
         videoFeed = VideoFeeder.getInstance().provideTranscodedVideoFeed();
         videoFeed.addVideoDataListener(new VideoFeeder.VideoDataListener() {
+            //raw H264 video data
             @Override
             public void onReceive(byte[] videoBuffer, int size) {
                 Log.d(TAG, "Video size:" + size);
@@ -158,9 +202,6 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         exitTestBtn = findViewById(R.id.exitTestBtn);
         multi1TestBtn = findViewById(R.id.multiTest1Btn);
         multi2TestBtn = findViewById(R.id.multiTest2Btn);
-        longitudeET = findViewById(R.id.longitudeET);
-        latitudeET = findViewById(R.id.latitudeET);
-        altitudeET = findViewById(R.id.altitudeET);
 
         targetAndGimbalTestBtn.setOnClickListener(this);
         flightTestBtn.setOnClickListener(this);
@@ -178,71 +219,69 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         videoSurface.setVisibility(View.VISIBLE);
 
         imageView = findViewById(R.id.matshowV);
+
+        drawingSurface = findViewById(R.id.drawingSurface);
+        drawingSurface.getHolder().addCallback(TestingActivity.this);
+        drawingSurface.setZOrderOnTop(true);
+        drawingSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        drawingSurface.setVisibility(View.VISIBLE);
     }
 
+    VisualLanding visualLanding;
     public void onClick(View v){
         switch (v.getId()) {
             case R.id.targetAndGimbalTestBtn:{
-                //test for the 'check' before visual landing
-                Tools.showToast(this, "Abandoned.");
+                //start to receive yuv data
+                yuvTest();
                 break;
             }
             case R.id.targetTestBtn:{
+                //show a bitmap while detecting
+                keep = true;
                 testTargetDetect();
                 break;
             }
             case R.id.flightTestBtn:{
-                float a=0, b=0, c=0;
-                if(latitudeET.getText().toString() != null){
-                    a = Float.parseFloat(latitudeET.getText().toString());
-                }
-
-                if(longitudeET.getText().toString() != null) {
-                    b = Float.parseFloat(longitudeET.getText().toString());
-                }
-
-                if(altitudeET.getText().toString() != null) {
-                    c = Float.parseFloat(altitudeET.getText().toString());
-                }
-
-                Point3D target = new Point3D(a, b, c);
-                Log.d(TAG, "Point3D:" + target);
-                VisualLandingFlightControl visualLandingFlightControl =
-                    new VisualLandingFlightControl(true, target);
-                FCTestThread = new Thread(visualLandingFlightControl);
-                FCTestThread.start();
+                targetDetect = new TargetDetect(this, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+                targetDetection = new Thread(targetDetect);
+                targetDetection.start();
                 break;
             }
             case R.id.targetAndFlightTestBtn:{
-                FCTestThread = new Thread(new VisualLandingFlightControl(codecManager));
+                FCTestThread = new Thread(new VisualLandingFlightControl());
                 FCTestThread.start();
                 break;
             }
             case R.id.fullStartTestBtn:{
-                VisualLanding visualLanding = new VisualLanding();
+                visualLanding = new VisualLanding();
                 visualLanding.startVisualLanding();
                 break;
             }
             case R.id.exitTestBtn:{
-                if(FCTestThread != null) {
-                    try {
-                        FCTestThread.interrupt();
-                    } catch (Exception e) {
-                        Tools.showToast(this, "Error occurs while trying to end the flight control.");
+                boolean done = false;
+                if(visualLanding != null) {
+                    if (visualLanding.visualLandingFlightControl != null) {
+                        visualLanding.visualLandingFlightControl.endVisualLandingFlightControl();
+                        done = true;
                     }
+                }
+                if(!done) {
+                    flightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if(djiError != null) {
+                                Log.d(TAG, djiError.getDescription());
+                            }
+                        }
+                    });
                 }
                 break;
             }
             case R.id.multiTest1Btn:{
-                Tools.showToast(this, "BREAK A LEG!");
+                codecManager.enabledYuvData(false);
                 break;
             }
             case R.id.multiTest2Btn:{
-                Tools.showToast(this, "BREAK 2 LEGS!");
-                //test for the flight control mode POSITION
-                VisualLandingFlightControl visualLandingFlightControl =
-                        new VisualLandingFlightControl();
-                visualLandingFlightControl.sendFlightUpCommand();
                 break;
             }
             default: break;
@@ -253,6 +292,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         if(codecManager == null) {
             codecManager = new DJICodecManager(this, surface, width, height);
+            startVisualLand();
         }
     }
 
@@ -276,21 +316,76 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     }
 
     //---------------test method-------------
+
     private void testTargetDetect() {
-        TargetDetect targetDetect = new TargetDetect(codecManager);
-        Mat frame = targetDetect.getTestMat();
-        Bitmap bitmap = null;
-        if(frame != null) {
-            if (frame.cols() > 0 && frame.rows() > 0) {
-                bitmap = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(frame, bitmap);
-            }
-        }else {
-            Log.e(TAG, "fail to create the bitmap");
-        }
-        imageView.setImageBitmap(bitmap);
         imageView.setVisibility(View.VISIBLE);
+        Mat mat1 = targetDetect.yuvTest();
+        bitmap = Bitmap.createBitmap(mat1.width(), mat1.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(mat1, bitmap);
+        imageView.setImageBitmap(bitmap);
     }
 
+    int cnt = 0;
+    private List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+    int videoHeight, videoWidth, resizeH, resizeW;
+    private void yuvTest(){
+        videoHeight = codecManager.getVideoHeight();
+        videoWidth = codecManager.getVideoWidth();
+
+        codecManager.enabledYuvData(true);
+        codecManager.setYuvDataCallback(new DJICodecManager.YuvDataCallback() {
+            @Override
+            public void onYuvDataReceived(MediaFormat mediaFormat, ByteBuffer byteBuffer, int i, int i1, int i2) {
+                if(cnt % 15 == 0) {
+                    yuv = new byte[i];
+                    byteBuffer.get(yuv);
+                    cnt = 0;
+                }
+                cnt ++;
+            }
+        });
+    }
+
+    public void startVisualLand() {
+
+//        visualLanding = new VisualLanding();
+
+        yuvTest();
+
+        GimbalRotateTask gimbalRotateTask = new GimbalRotateTask(GimbalTaskMode.ADJUST);
+        Timer timerGimbalRotateTask = new Timer();
+        timerGimbalRotateTask.schedule(gimbalRotateTask, 0, 100);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        targetDetect = new TargetDetect(this, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+        targetDetection = new Thread(targetDetect);
+        targetDetection.start();
+
+        FCTestThread = new Thread(new VisualLandingFlightControl(targetDetect));
+        FCTestThread.start();
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        Log.d(TAG, "SurfaceViewStart");
+        drawingLandingPointThread = new DrawingLandingPointThread(drawingSurface, videoSurface.getHeight(), videoSurface.getWidth());
+        drawingLandingPointThread.start();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        drawingLandingPointThread.drawingControl = false;
+        drawingLandingPointThread.interrupt();
+    }
 }
 
