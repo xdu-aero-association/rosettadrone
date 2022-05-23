@@ -102,7 +102,7 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(mReceiver);
+ //       unregisterReceiver(mReceiver);
         removeListener();
         super.onDestroy();
     }
@@ -166,9 +166,9 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
 
         setContentView(R.layout.activity_waypoint1);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(DJISimulatorApplication.FLAG_CONNECTION_CHANGE);
-        registerReceiver(mReceiver, filter);
+ //       IntentFilter filter = new IntentFilter();
+ //       filter.addAction(DJISimulatorApplication.FLAG_CONNECTION_CHANGE);
+ //       registerReceiver(mReceiver, filter);
 
         initUI();
 
@@ -321,7 +321,7 @@ public class Waypoint1Activity extends FragmentActivity implements View.OnClickL
         //Create MarkerOptions object
         final MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(pos);
-        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.aircraft));
+        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_drone));
 
         runOnUiThread(new Runnable() {
             @Override
