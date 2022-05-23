@@ -89,7 +89,7 @@
 //
 
 apply plugin: 'com.android.library'
-//apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android'
 
 def openCVersionName = "4.5.4"
 def openCVersionCode = ((4 * 100 + 5) * 100 + 4) * 10 + 0
@@ -97,11 +97,11 @@ def openCVersionCode = ((4 * 100 + 5) * 100 + 4) * 10 + 0
 println "OpenCV: " +openCVersionName + " " + project.buildscript.sourceFile
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 26
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 26
 
         versionCode openCVersionCode
         versionName openCVersionName
@@ -147,4 +147,8 @@ android {
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }

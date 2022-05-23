@@ -3,11 +3,12 @@ package sq.rogue.rosettadrone;
 import android.util.Log;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import androidx.annotation.Nullable;
 import dji.common.error.DJIError;
 import dji.common.gimbal.Attitude;
 import dji.common.gimbal.Rotation;
@@ -30,7 +31,6 @@ import dji.sdk.mission.timeline.TimelineElement;
 import dji.sdk.mission.timeline.TimelineEvent;
 import dji.sdk.mission.timeline.TimelineMission;
 import dji.sdk.mission.timeline.actions.GimbalAttitudeAction;
-import dji.sdk.mission.timeline.actions.GoHomeAction;
 import dji.sdk.mission.timeline.actions.GoToAction;
 import dji.sdk.mission.timeline.actions.HotpointAction;
 import dji.sdk.mission.timeline.actions.TakeOffAction;
@@ -39,6 +39,7 @@ import dji.sdk.mission.timeline.triggers.BatteryPowerLevelTrigger;
 import dji.sdk.mission.timeline.triggers.Trigger;
 import dji.sdk.mission.timeline.triggers.TriggerEvent;
 import dji.sdk.mission.timeline.triggers.WaypointReachedTrigger;
+import sq.rogue.rosettadrone.autolanding.VisualLanding;
 import sq.rogue.rosettadrone.settings.GeneralUtils;
 
 /**
@@ -212,9 +213,11 @@ public class TimeLineMissionControlView {
         hotpointMission.setHeading(heading);
         elements.add(new HotpointAction(hotpointMission, 360));
 
+
+        //we do not need to go to home anymore
         //Step 11: go back home
-        setTimelinePlanToText("Step 11: go back home");
-        elements.add(new GoHomeAction());
+        //setTimelinePlanToText("Step 11: go back home");
+        //elements.add(new GoHomeAction());
 
         //Step 12: restore gimbal attitude
         //This last action will delay the timeline to finish after land on ground, which will
@@ -354,9 +357,13 @@ public class TimeLineMissionControlView {
         return waypointMissionBuilder.build();
     }
 
+    VisualLanding visualLanding;
     void startTimeline() {
         if (MissionControl.getInstance().scheduledCount() > 0) {
             MissionControl.getInstance().startTimeline();
+            visualLanding = new VisualLanding();
+            visualLanding.startVisualLanding();
+
         } else {
             Log.d(TAG, "Wait for takeoff...");
         }
