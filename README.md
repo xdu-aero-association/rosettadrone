@@ -1,4 +1,4 @@
-# RosettaDrone 2 is now updated to DJI SDK 4.15.2
+# RosettaDrone 2 is now updated to DJI SDK 4.16.1...
 
 ## Codacy Badge
 
