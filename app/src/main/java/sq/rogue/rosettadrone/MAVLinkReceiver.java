@@ -1,52 +1,8 @@
 package sq.rogue.rosettadrone;
 
-import android.util.Log;
-
-import com.MAVLink.Messages.MAVLinkMessage;
-import com.MAVLink.common.msg_command_long;
-import com.MAVLink.common.msg_manual_control;
-import com.MAVLink.common.msg_mission_ack;
-import com.MAVLink.common.msg_mission_count;
-import com.MAVLink.common.msg_mission_item;
-import com.MAVLink.common.msg_mission_item_int;
-import com.MAVLink.common.msg_mission_request;
-import com.MAVLink.common.msg_mission_request_int;
-import com.MAVLink.common.msg_param_request_read;
-import com.MAVLink.common.msg_param_set;
-import com.MAVLink.common.msg_set_mode;
-import com.MAVLink.common.msg_set_position_target_global_int;
-import com.MAVLink.common.msg_file_transfer_protocol;
-import com.MAVLink.common.msg_set_position_target_local_ned;
-import com.MAVLink.enums.MAV_CMD;
-import com.MAVLink.enums.MAV_MISSION_RESULT;
-import com.MAVLink.enums.MAV_MISSION_TYPE;
-import com.MAVLink.enums.MAV_RESULT;
-
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-
-import java.io.File;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-
-import dji.common.flightcontroller.FlightControllerState;
-import dji.common.mission.waypoint.Waypoint;
-import dji.common.mission.waypoint.WaypointAction;
-import dji.common.mission.waypoint.WaypointActionType;
-import dji.common.mission.waypoint.WaypointMission;
-import dji.common.mission.waypoint.WaypointMissionFinishedAction;
-import dji.common.mission.waypoint.WaypointMissionFlightPathMode;
-import dji.common.mission.waypoint.WaypointMissionGotoWaypointMode;
-import dji.common.mission.waypoint.WaypointMissionHeadingMode;
-import dji.common.mission.waypoint.WaypointMissionState;
-
 import static com.MAVLink.common.msg_command_int.MAVLINK_MSG_ID_COMMAND_INT;
 import static com.MAVLink.common.msg_command_long.MAVLINK_MSG_ID_COMMAND_LONG;
+import static com.MAVLink.common.msg_file_transfer_protocol.MAVLINK_MSG_ID_FILE_TRANSFER_PROTOCOL;
 import static com.MAVLink.common.msg_heartbeat.MAVLINK_MSG_ID_HEARTBEAT;
 import static com.MAVLink.common.msg_manual_control.MAVLINK_MSG_ID_MANUAL_CONTROL;
 import static com.MAVLink.common.msg_mission_ack.MAVLINK_MSG_ID_MISSION_ACK;
@@ -73,29 +29,64 @@ import static com.MAVLink.enums.MAV_CMD.MAV_CMD_DO_SET_MODE;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_DO_SET_SERVO;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_GET_HOME_POSITION;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_MISSION_START;
-import static com.MAVLink.enums.MAV_CMD.MAV_CMD_OVERRIDE_GOTO;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_NAV_LAND;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_NAV_LOITER_UNLIM;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_NAV_TAKEOFF;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_NAV_WAYPOINT;
+import static com.MAVLink.enums.MAV_CMD.MAV_CMD_OVERRIDE_GOTO;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_VIDEO_START_CAPTURE;
 import static com.MAVLink.enums.MAV_CMD.MAV_CMD_VIDEO_STOP_CAPTURE;
-import static com.MAVLink.enums.MAV_MISSION_TYPE.MAV_MISSION_TYPE_MISSION;
-import static com.MAVLink.common.msg_file_transfer_protocol.MAVLINK_MSG_ID_FILE_TRANSFER_PROTOCOL;
-import static com.MAVLink.enums.MAV_GOTO.MAV_GOTO_HOLD_AT_SPECIFIED_POSITION;
 import static com.MAVLink.enums.MAV_GOTO.MAV_GOTO_DO_CONTINUE;
 import static com.MAVLink.enums.MAV_GOTO.MAV_GOTO_HOLD_AT_CURRENT_POSITION;
+import static com.MAVLink.enums.MAV_GOTO.MAV_GOTO_HOLD_AT_SPECIFIED_POSITION;
+import static com.MAVLink.enums.MAV_MISSION_TYPE.MAV_MISSION_TYPE_MISSION;
+import static com.MAVLink.enums.MAV_PROTOCOL_CAPABILITY.MAV_PROTOCOL_CAPABILITY_FTP;
+import static com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG;
 import static sq.rogue.rosettadrone.util.TYPE_WAYPOINT_DISTANCE;
 import static sq.rogue.rosettadrone.util.TYPE_WAYPOINT_MAX_ALTITUDE;
 import static sq.rogue.rosettadrone.util.TYPE_WAYPOINT_MAX_SPEED;
 import static sq.rogue.rosettadrone.util.TYPE_WAYPOINT_MIN_ALTITUDE;
 import static sq.rogue.rosettadrone.util.TYPE_WAYPOINT_MIN_SPEED;
-import static com.MAVLink.enums.MAV_PROTOCOL_CAPABILITY.MAV_PROTOCOL_CAPABILITY_FTP;
-import static com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG;
 
-import static sq.rogue.rosettadrone.util.safeSleep;
+import android.util.Log;
+
+import com.MAVLink.Messages.MAVLinkMessage;
+import com.MAVLink.common.msg_command_long;
+import com.MAVLink.common.msg_file_transfer_protocol;
+import com.MAVLink.common.msg_manual_control;
+import com.MAVLink.common.msg_mission_ack;
+import com.MAVLink.common.msg_mission_count;
+import com.MAVLink.common.msg_mission_item;
+import com.MAVLink.common.msg_mission_item_int;
+import com.MAVLink.common.msg_mission_request;
+import com.MAVLink.common.msg_param_request_read;
+import com.MAVLink.common.msg_param_set;
+import com.MAVLink.common.msg_set_mode;
+import com.MAVLink.common.msg_set_position_target_global_int;
+import com.MAVLink.common.msg_set_position_target_local_ned;
+import com.MAVLink.enums.MAV_CMD;
+import com.MAVLink.enums.MAV_MISSION_RESULT;
+import com.MAVLink.enums.MAV_RESULT;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+
+import dji.common.mission.waypoint.Waypoint;
+import dji.common.mission.waypoint.WaypointAction;
+import dji.common.mission.waypoint.WaypointActionType;
+import dji.common.mission.waypoint.WaypointMission;
+import dji.common.mission.waypoint.WaypointMissionFinishedAction;
+import dji.common.mission.waypoint.WaypointMissionFlightPathMode;
+import dji.common.mission.waypoint.WaypointMissionGotoWaypointMode;
+import dji.common.mission.waypoint.WaypointMissionHeadingMode;
+import dji.common.mission.waypoint.WaypointMissionState;
 
 public class MAVLinkReceiver {
 
@@ -915,6 +906,7 @@ public class MAVLinkReceiver {
 
         mMissionItemList=null;  // Flush the mission list...
         isHome = true;
+
     }
 
     private void logWaypointstoRD(ArrayList<Waypoint> wps) {

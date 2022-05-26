@@ -1,14 +1,28 @@
 package sq.rogue.rosettadrone;
 
+import static com.MAVLink.common.msg_set_position_target_global_int.MAVLINK_MSG_ID_SET_POSITION_TARGET_GLOBAL_INT;
+import static com.MAVLink.enums.MAV_CMD.MAV_CMD_COMPONENT_ARM_DISARM;
+import static com.MAVLink.enums.MAV_CMD.MAV_CMD_DO_DIGICAM_CONTROL;
+import static com.MAVLink.enums.MAV_CMD.MAV_CMD_DO_SET_PARAMETER;
+import static com.MAVLink.enums.MAV_CMD.MAV_CMD_DO_SET_SERVO;
+import static com.MAVLink.enums.MAV_CMD.MAV_CMD_NAV_TAKEOFF;
+import static com.MAVLink.enums.MAV_CMD.MAV_CMD_VIDEO_START_CAPTURE;
+import static com.MAVLink.enums.MAV_CMD.MAV_CMD_VIDEO_STOP_CAPTURE;
+import static com.MAVLink.enums.MAV_COMPONENT.MAV_COMP_ID_AUTOPILOT1;
+import static com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG;
+import static sq.rogue.rosettadrone.util.getTimestampMicroseconds;
+import static sq.rogue.rosettadrone.util.safeSleep;
+
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.MAVLink.MAVLinkPacket;
 import com.MAVLink.Messages.MAVLinkMessage;
@@ -56,13 +70,11 @@ import java.net.PortUnreachableException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import androidx.annotation.NonNull;
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.Attitude;
@@ -109,20 +121,8 @@ import dji.sdk.mission.followme.FollowMeMissionOperator;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
+import sq.rogue.rosettadrone.autolanding.VisualLanding;
 import sq.rogue.rosettadrone.settings.MailReport;
-
-import static com.MAVLink.common.msg_set_position_target_global_int.MAVLINK_MSG_ID_SET_POSITION_TARGET_GLOBAL_INT;
-import static com.MAVLink.enums.MAV_CMD.MAV_CMD_COMPONENT_ARM_DISARM;
-import static com.MAVLink.enums.MAV_CMD.MAV_CMD_DO_DIGICAM_CONTROL;
-import static com.MAVLink.enums.MAV_CMD.MAV_CMD_DO_SET_PARAMETER;
-import static com.MAVLink.enums.MAV_CMD.MAV_CMD_DO_SET_SERVO;
-import static com.MAVLink.enums.MAV_CMD.MAV_CMD_NAV_TAKEOFF;
-import static com.MAVLink.enums.MAV_CMD.MAV_CMD_VIDEO_START_CAPTURE;
-import static com.MAVLink.enums.MAV_CMD.MAV_CMD_VIDEO_STOP_CAPTURE;
-import static com.MAVLink.enums.MAV_COMPONENT.MAV_COMP_ID_AUTOPILOT1;
-import static com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG;
-import static sq.rogue.rosettadrone.util.getTimestampMicroseconds;
-import static sq.rogue.rosettadrone.util.safeSleep;
 
 // TENI import dji.common.remotecontroller.ChargeRemaining;
 // import dji.sdksharedlib.keycatalog.extension.InternalKey;
@@ -741,10 +741,17 @@ public class DroneModel implements CommonCallbacks.CompletionCallback {
     WaypointMissionOperator getWaypointMissionOperator() {
         return MissionControl.getInstance().getWaypointMissionOperator();
     }
-
+    VisualLanding visualLanding;
     private void initMissionOperator() {
         getWaypointMissionOperator().removeListener(null);
-        RosettaMissionOperatorListener mMissionOperatorListener = new RosettaMissionOperatorListener();
+        RosettaMissionOperatorListener mMissionOperatorListener = new RosettaMissionOperatorListener(){
+            //@Override
+            //public void onExecutionFinish(@Nullable final DJIError error) {
+
+              //  visualLanding = new VisualLanding();
+              //  visualLanding.startVisualLanding();
+            //}
+        };
         mMissionOperatorListener.setMainActivity(parent);
         getWaypointMissionOperator().addListener(mMissionOperatorListener);
     }

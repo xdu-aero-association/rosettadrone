@@ -5,10 +5,12 @@ package sq.rogue.rosettadrone;
 // Hide keyboard: https://stackoverflow.com/questions/16495440/how-to-hide-keyboard-by-default-and-show-only-when-click-on-edittext
 // MenuItemTetColor: RPP @ https://stackoverflow.com/questions/31713628/change-menuitem-text-color-programmatically
 
+import static com.google.android.material.snackbar.Snackbar.LENGTH_LONG;
+import static sq.rogue.rosettadrone.util.safeSleep;
+
 import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -21,10 +23,7 @@ import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.StateListDrawable;
 import android.hardware.usb.UsbManager;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -52,15 +51,21 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.PreferenceManager;
+
 import com.MAVLink.MAVLinkPacket;
 import com.MAVLink.Messages.MAVLinkMessage;
 import com.MAVLink.Parser;
-
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -86,40 +91,24 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.preference.Preference;
-import androidx.preference.PreferenceManager;
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
-import dji.common.flightcontroller.LocationCoordinate3D;
 import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointMission;
 import dji.common.model.LocationCoordinate2D;
 import dji.common.product.Model;
-import dji.common.util.CommonCallbacks;
-import dji.log.DJILog;
 import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
-import dji.sdk.camera.Camera;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
-import dji.sdk.media.DownloadListener;
 import dji.sdk.media.FetchMediaTaskScheduler;
 import dji.sdk.media.MediaFile;
 import dji.sdk.media.MediaManager;
@@ -128,19 +117,12 @@ import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 import sq.rogue.rosettadrone.autolanding.TestingActivity;
 import sq.rogue.rosettadrone.logs.LogFragment;
-import sq.rogue.rosettadrone.settings.GMailSender;
-import sq.rogue.rosettadrone.settings.MailReport;
 import sq.rogue.rosettadrone.settings.SettingsActivity;
 import sq.rogue.rosettadrone.settings.Tools;
 import sq.rogue.rosettadrone.settings.Waypoint1Activity;
 import sq.rogue.rosettadrone.settings.Waypoint2Activity;
 import sq.rogue.rosettadrone.video.NativeHelper;
 import sq.rogue.rosettadrone.video.VideoService;
-
-import static com.google.android.material.snackbar.Snackbar.LENGTH_LONG;
-import static sq.rogue.rosettadrone.util.safeSleep;
-
-import org.opencv.core.Mat;
 // TODO: Continue does not work, pause only allow flying in line with mission, report does not work, Button click should be changed, Mission not shown on rosettadrone.
 
 
@@ -721,6 +703,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+
+
+
         Log.e(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
 

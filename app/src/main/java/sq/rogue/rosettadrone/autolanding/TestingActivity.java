@@ -1,31 +1,9 @@
 package sq.rogue.rosettadrone.autolanding;
 
-import static org.opencv.imgproc.Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C;
-import static org.opencv.imgproc.Imgproc.CHAIN_APPROX_NONE;
-import static org.opencv.imgproc.Imgproc.COLOR_RGB2GRAY;
-import static org.opencv.imgproc.Imgproc.COLOR_YUV2BGR;
-import static org.opencv.imgproc.Imgproc.COLOR_YUV2BGR_NV12;
-import static org.opencv.imgproc.Imgproc.COLOR_YUV2GRAY_420;
-import static org.opencv.imgproc.Imgproc.COLOR_YUV2RGB_I420;
-import static org.opencv.imgproc.Imgproc.RETR_LIST;
-import static org.opencv.imgproc.Imgproc.THRESH_BINARY_INV;
-import static org.opencv.imgproc.Imgproc.adaptiveThreshold;
-import static org.opencv.imgproc.Imgproc.contourArea;
-import static org.opencv.imgproc.Imgproc.cvtColor;
-import static org.opencv.imgproc.Imgproc.findContours;
-import static org.opencv.imgproc.Imgproc.minAreaRect;
-import static org.opencv.imgproc.Imgproc.moments;
-import static org.opencv.imgproc.Imgproc.resize;
-
 import android.app.Activity;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
-import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.graphics.YuvImage;
 import android.media.MediaFormat;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,28 +12,19 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RadioGroup;
 
-import org.greenrobot.eventbus.EventBus;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.RotatedRect;
-import org.opencv.imgproc.Moments;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
@@ -64,18 +33,15 @@ import dji.common.flightcontroller.virtualstick.VerticalControlMode;
 import dji.common.flightcontroller.virtualstick.YawControlMode;
 import dji.common.product.Model;
 import dji.common.util.CommonCallbacks;
-import dji.lidar_map.my_point_3d.Point3D;
-import dji.midware.data.model.P3.Ta;
 import dji.sdk.base.BaseProduct;
-import dji.sdk.camera.Camera;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
-import okhttp3.internal.Util;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
-import sq.rogue.rosettadrone.settings.Tools;
+
+//import dji.midware.data.model.P3.Ta;
 
 public class TestingActivity extends Activity implements TextureView.SurfaceTextureListener, SurfaceHolder.Callback, View.OnClickListener {
 
