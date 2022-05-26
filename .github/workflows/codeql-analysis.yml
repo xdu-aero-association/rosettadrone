@@ -16,13 +16,15 @@ on:
     branches:
     - master
     - work
-    - add-feature
+    - AddGaode
+    - OpenCV-Landing
   pull_request:
     # The branches below must be a subset of the branches above
     branches:
     - master
     - work
-    - add-feature
+    - AddGaode
+    - OpenCV-Landing
   schedule:
     - cron: '15 13 * * 5'
 
