@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,6 +13,9 @@ import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -31,8 +33,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentActivity;
 import dji.common.error.DJIError;
 import dji.common.error.DJIWaypointV2Error;
 import dji.common.flightcontroller.FlightControllerState;
@@ -58,12 +58,8 @@ import dji.sdk.mission.waypoint.WaypointV2MissionOperatorListener;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.useraccount.UserAccountManager;
-import sq.rogue.rosettadrone.DJISimulatorApplication;
-import sq.rogue.rosettadrone.MainActivity;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
-import sq.rogue.rosettadrone.autolanding.TestingActivity;
-import sq.rogue.rosettadrone.autolanding.VisualLanding;
 
 public class Waypoint2Activity extends FragmentActivity implements View.OnClickListener, GoogleMap.OnMapClickListener, OnMapReadyCallback {
 
@@ -774,10 +770,7 @@ public class Waypoint2Activity extends FragmentActivity implements View.OnClickL
             }
         });
 
-        if (visualLandOn) {
-            VisualLanding visualLanding = new VisualLanding();
-            visualLanding.startVisualLanding();
-        }
+
     }
 
     private void stopWaypointMission() {

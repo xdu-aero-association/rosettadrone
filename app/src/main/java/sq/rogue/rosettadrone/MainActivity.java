@@ -123,11 +123,12 @@ import sq.rogue.rosettadrone.settings.Waypoint1Activity;
 import sq.rogue.rosettadrone.settings.Waypoint2Activity;
 import sq.rogue.rosettadrone.video.NativeHelper;
 import sq.rogue.rosettadrone.video.VideoService;
+import sq.rogue.rosettadrone.autolanding.onQGCMissionOverCallback;
 // TODO: Continue does not work, pause only allow flying in line with mission, report does not work, Button click should be changed, Mission not shown on rosettadrone.
 
 
 //public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,onQGCMissionOverCallback {
 
     //    public static final String FLAG_CONNECTION_CHANGE = "dji_sdk_connection_change";
     private final static int RESULT_SETTINGS = 1001;
@@ -1410,8 +1411,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 break;
             case R.id.action_AI:
                 Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                logMessageDJI("step1");
                 Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+                logMessageDJI("step2");
                 startActivity("com.example.remoteconfig4");
+                logMessageDJI("step3");
                 break;
             default:
                 return false;
@@ -2056,6 +2060,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         return VideoFeeder.getInstance().isFetchKeyFrameNeeded() || VideoFeeder.getInstance()
                 .isLensDistortionCalibrationNeeded();
+    }
+
+    @Override
+    public void onQGCMissonOverNotice(){
+        Tools.showToast(this, "BREAK A LEG :D");
+        Intent intent = new Intent(this, TestingActivity.class);
+        startActivity(intent);
     }
 
 

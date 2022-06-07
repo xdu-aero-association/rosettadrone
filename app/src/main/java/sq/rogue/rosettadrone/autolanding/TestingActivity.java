@@ -41,8 +41,6 @@ import dji.sdk.products.Aircraft;
 import sq.rogue.rosettadrone.R;
 import sq.rogue.rosettadrone.RDApplication;
 
-//import dji.midware.data.model.P3.Ta;
-
 public class TestingActivity extends Activity implements TextureView.SurfaceTextureListener, SurfaceHolder.Callback, View.OnClickListener {
 
     private static final String TAG = "TestingActivity";
@@ -73,6 +71,8 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
     private Mat frame = null;
     private boolean keep = false;
     public byte[] yuv = null;
+    VisualLanding visualLanding;
+
 
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -106,6 +106,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 Log.d(TAG, "Video size:" + size);
             }
         });
+        //startVisualLand();
     }
 
     @Override
@@ -193,7 +194,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         drawingSurface.setVisibility(View.VISIBLE);
     }
 
-    VisualLanding visualLanding;
+
     public void onClick(View v){
         switch (v.getId()) {
             case R.id.targetAndGimbalTestBtn:{
@@ -219,7 +220,10 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
                 break;
             }
             case R.id.fullStartTestBtn:{
-                visualLanding = new VisualLanding();
+                targetDetect = new TargetDetect(this, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+                targetDetection = new Thread(targetDetect);
+                targetDetection.start();
+                visualLanding = new VisualLanding(targetDetect);
                 visualLanding.startVisualLanding();
                 break;
             }
@@ -260,6 +264,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
             codecManager = new DJICodecManager(this, surface, width, height);
             startVisualLand();
         }
+
     }
 
     @Override
@@ -331,6 +336,9 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         targetDetect = new TargetDetect(this, codecManager.getVideoWidth(), codecManager.getVideoHeight());
         targetDetection = new Thread(targetDetect);
         targetDetection.start();
+        visualLanding = new VisualLanding(targetDetect);
+        visualLanding.startVisualLanding();
+
 
         FCTestThread = new Thread(new VisualLandingFlightControl(targetDetect));
         FCTestThread.start();
@@ -341,6 +349,7 @@ public class TestingActivity extends Activity implements TextureView.SurfaceText
         Log.d(TAG, "SurfaceViewStart");
         drawingLandingPointThread = new DrawingLandingPointThread(drawingSurface, videoSurface.getHeight(), videoSurface.getWidth());
         drawingLandingPointThread.start();
+
     }
 
     @Override
