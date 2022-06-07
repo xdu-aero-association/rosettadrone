@@ -24,17 +24,24 @@ public class VisualLanding {
     GimbalRotateTask gimbalRotateTask;
     Timer timerGimbalRotateTask;
 
-    public VisualLanding( ) {
+    public VisualLanding(TargetDetect targetDetect ) {
 //        visualLandingFlightControl = new VisualLandingFlightControl();
+        this.targetDetect = targetDetect;
     }
 
     public void startVisualLanding() {
-
+        //float hight;
         startGimbalTask(GimbalTaskMode.ADJUST);
 
         if(checkVisualLanding()){
             Thread visualLandingFlightControlThread = new Thread(visualLandingFlightControl);
             visualLandingFlightControlThread.start();
+            //hight = ((Aircraft)RDApplication.getProductInstance()).getFlightController()
+            //        .getState().getAircraftLocation().getAltitude();
+            //if(hight > 10) {
+            //    visualLandingFlightControl.InitAircraftHight(hight);
+                //visualLandingFlightControl.sendFlightUpCommand();
+            //}
             Log.d(TAG, "visualLandingFlightControl start");
         }else {
             Log.d(TAG, "Start visual landing failed, because the target is not in vision.");
@@ -42,7 +49,6 @@ public class VisualLanding {
     }
 
     private boolean checkVisualLanding() {
-
         Log.d(TAG, "check visual landing");
         if(targetDetect.isTargetInVision()) {
             return true;

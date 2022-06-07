@@ -3,8 +3,6 @@ package sq.rogue.rosettadrone.autolanding;
 import android.graphics.PointF;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -13,18 +11,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import dji.common.error.DJIError;
-import dji.common.flightcontroller.FlightControllerState;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
 import dji.common.flightcontroller.virtualstick.VerticalControlMode;
 import dji.common.flightcontroller.virtualstick.YawControlMode;
 import dji.common.util.CommonCallbacks;
-import dji.lidar_map.my_point_3d.Point3D;
-import dji.midware.media.DJIVideoDecoder;
 import dji.sdk.codec.DJICodecManager;
 import dji.sdk.flightcontroller.FlightController;
-import dji.sdk.gimbal.Gimbal;
 import dji.sdk.products.Aircraft;
 import sq.rogue.rosettadrone.RDApplication;
 
@@ -82,6 +76,7 @@ public class VisualLandingFlightControl implements Runnable{
     }
 
     private void initFlightControl() {
+        float Hight;
         flightController = ((Aircraft) RDApplication.getProductInstance()).getFlightController();
         if(flightController != null) {
             flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
@@ -94,7 +89,10 @@ public class VisualLandingFlightControl implements Runnable{
             });
 
             flightControlData = new FlightControlData(0, 0, 0, 0);      //relative control mode init
-
+            Hight = flightController.getState().getAircraftLocation().getAltitude();
+            if(Hight > 10) {
+                InitAircraftHight(Hight);
+            }
             //set the control mode
             flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
             flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
@@ -171,6 +169,14 @@ public class VisualLandingFlightControl implements Runnable{
         timerFlightDataTask = null;
         flightControlDataTask = null;
         flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
+    }
+
+    public void InitAircraftHight(float Hight){
+        //initFlightControl();
+        flightController.setVerticalControlMode(VerticalControlMode.POSITION);
+        flightControlData = new FlightControlData(0, 0, 0, 10);
+        timerFlightDataTask = new Timer();
+        timerFlightDataTask.schedule(new FlightControlDataTask(), 0, 200);
     }
 
     public void sendFlightUpCommand() {

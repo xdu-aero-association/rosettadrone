@@ -23,6 +23,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.MAVLink.MAVLinkPacket;
 import com.MAVLink.Messages.MAVLinkMessage;
@@ -122,13 +123,14 @@ import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
 import sq.rogue.rosettadrone.autolanding.VisualLanding;
+import sq.rogue.rosettadrone.autolanding.onQGCMissionOverCallback;
 import sq.rogue.rosettadrone.settings.MailReport;
-
 // TENI import dji.common.remotecontroller.ChargeRemaining;
 // import dji.sdksharedlib.keycatalog.extension.InternalKey;
 
 
 public class DroneModel implements CommonCallbacks.CompletionCallback {
+    private onQGCMissionOverCallback onQGCmissionovercallback;
     private static final int NOT_USING_GCS_COMMANDED_MODE = -1;
     private final String TAG = DroneModel.class.getSimpleName();
     public DatagramSocket socket;
@@ -261,6 +263,7 @@ public class DroneModel implements CommonCallbacks.CompletionCallback {
         this.socket = socket;
         this.numFiles = 0;
         initFlightController(sim);
+        this.onQGCmissionovercallback = parent;
     }
 
     public float get_battery_status() {
@@ -744,13 +747,21 @@ public class DroneModel implements CommonCallbacks.CompletionCallback {
     VisualLanding visualLanding;
     private void initMissionOperator() {
         getWaypointMissionOperator().removeListener(null);
-        RosettaMissionOperatorListener mMissionOperatorListener = new RosettaMissionOperatorListener(){
-            //@Override
-            //public void onExecutionFinish(@Nullable final DJIError error) {
+        RosettaMissionOperatorListener mMissionOperatorListener;
 
-              //  visualLanding = new VisualLanding();
-              //  visualLanding.startVisualLanding();
-            //}
+        // auto land
+        mMissionOperatorListener = new RosettaMissionOperatorListener(){
+
+            @Override
+            public void onExecutionFinish(@Nullable final DJIError error) {
+
+                //visualLanding = new VisualLanding();
+                //visualLanding.startVisualLanding();
+                //Intent intent = new Intent(MainActivity.this,TestingActivity.class);
+                //startActivity(intent);
+
+                onQGCmissionovercallback.onQGCMissonOverNotice();
+            }
         };
         mMissionOperatorListener.setMainActivity(parent);
         getWaypointMissionOperator().addListener(mMissionOperatorListener);

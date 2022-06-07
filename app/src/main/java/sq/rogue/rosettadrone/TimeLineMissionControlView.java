@@ -39,7 +39,6 @@ import dji.sdk.mission.timeline.triggers.BatteryPowerLevelTrigger;
 import dji.sdk.mission.timeline.triggers.Trigger;
 import dji.sdk.mission.timeline.triggers.TriggerEvent;
 import dji.sdk.mission.timeline.triggers.WaypointReachedTrigger;
-import sq.rogue.rosettadrone.autolanding.VisualLanding;
 import sq.rogue.rosettadrone.settings.GeneralUtils;
 
 /**
@@ -357,12 +356,10 @@ public class TimeLineMissionControlView {
         return waypointMissionBuilder.build();
     }
 
-    VisualLanding visualLanding;
+
     void startTimeline() {
         if (MissionControl.getInstance().scheduledCount() > 0) {
             MissionControl.getInstance().startTimeline();
-            visualLanding = new VisualLanding();
-            visualLanding.startVisualLanding();
 
         } else {
             Log.d(TAG, "Wait for takeoff...");
